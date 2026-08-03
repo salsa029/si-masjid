@@ -54,7 +54,7 @@
                 <div>
                     <label class="mb-1 block text-sm font-medium text-gray-700">Nominal Minimum Infaq</label>
                     <input type="number" name="min_infaq_amount"
-                        value="{{ old('min_infaq_amount', $settings->min_infaq_amount ?? 10000) }}"
+                        value="{{ old('min_infaq_amount', $settings->min_infaq_amount ?? 2000) }}"
                         class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
                     @error('min_infaq_amount')
                         <p class="mt-1 text-xs text-red-600">{{ $message }}</p>

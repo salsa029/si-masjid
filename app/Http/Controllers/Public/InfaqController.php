@@ -33,7 +33,7 @@ class InfaqController extends Controller
     {
         $categories = InfaqCategory::orderBy('name')->get();
         $activeCampaigns = InfaqCampaign::where('status', 'active')->latest()->take(6)->get();
-        $settings = DonationSetting::first();
+        $settings = DonationSetting::firstOrNew();
 
         return view('public.infaq.index', compact('categories', 'activeCampaigns', 'settings'));
     }
@@ -51,8 +51,8 @@ class InfaqController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
-        $settings = DonationSetting::first();
-        $minAmount = $settings->min_infaq_amount ?? 10000;
+        $settings = DonationSetting::firstOrNew();
+        $minAmount = $settings->min_infaq_amount ?? 2000;
 
         $validated = $request->validate([
             'category_id' => ['nullable', 'exists:infaq_categories,id'],
@@ -94,7 +94,8 @@ class InfaqController extends Controller
         $snapToken = null;
 
         if ($infaq->payment_status === 'pending' && $infaq->payment_method === 'midtrans') {
-            $snapToken = $this->midtransService->createSnapToken(
+            $snapToken = $this->midtransService->getOrCreateSnapToken(
+                $infaq,
                 orderId: $infaq->midtrans_order_id,
                 amount: (int) round($infaq->amount),
                 customerDetails: ['first_name' => Auth::user()->name, 'email' => Auth::user()->email],
@@ -102,9 +103,31 @@ class InfaqController extends Controller
             );
         }
 
-        $settings = DonationSetting::first();
+        $settings = DonationSetting::firstOrNew();
 
         return view('public.infaq.pay', compact('infaq', 'snapToken', 'settings'));
+    }
+
+    /**
+     * Sinkronkan status transaksi langsung ke Midtrans (fallback selain webhook).
+     * Berguna terutama saat development lokal, di mana webhook Midtrans tidak bisa
+     * menjangkau localhost sehingga status tidak pernah otomatis ter-update.
+     */
+    public function checkStatus(Infaq $infaq): RedirectResponse
+    {
+        abort_unless($infaq->user_id === Auth::id(), 403);
+
+        if ($infaq->payment_status === 'pending' && $infaq->payment_method === 'midtrans') {
+            $status = $this->midtransService->getPaymentStatus($infaq->midtrans_order_id);
+
+            if ($status === 'success') {
+                $this->donationService->markAsSuccess($infaq, 'midtrans');
+            } elseif ($status !== null && $status !== 'pending') {
+                $infaq->update(['payment_status' => $status]);
+            }
+        }
+
+        return redirect()->route('public.infaq.pay', $infaq);
     }
 
     /**
@@ -150,6 +173,27 @@ class InfaqController extends Controller
         $pdf = Pdf::loadView('pdf.infaq-receipt', compact('infaq', 'mosqueProfile'));
 
         return $pdf->download('e-kuitansi-' . $infaq->transaction_number . '.pdf');
+    }
+
+    /**
+     * Hapus transaksi Infaq dari riwayat (hanya yang belum berhasil).
+     */
+    public function destroy(Request $request, Infaq $infaq): RedirectResponse
+    {
+        abort_unless($infaq->user_id === Auth::id(), 403);
+        abort_if($infaq->payment_status === 'success', 403, 'Transaksi yang sudah berhasil tidak dapat dihapus.');
+
+        $validated = $request->validate([
+            'deletion_reason' => ['required', 'string', 'max:500'],
+        ], [
+            'deletion_reason.required' => 'Alasan penghapusan wajib diisi.',
+        ]);
+
+        $infaq->update(['deletion_reason' => $validated['deletion_reason']]);
+        $infaq->delete();
+
+        return redirect()->route('public.infaq.history')
+            ->with('success', 'Transaksi infaq berhasil dihapus dari riwayat.');
     }
 
     /**

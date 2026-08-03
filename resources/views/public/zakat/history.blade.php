@@ -6,6 +6,10 @@
     <div class="mx-auto max-w-4xl px-4 py-10">
         <h1 class="mb-6 text-2xl font-bold text-gray-800">Riwayat Zakat Saya</h1>
 
+        @if (session('success'))
+            <div class="mb-4 rounded-lg bg-emerald-50 p-4 text-sm text-emerald-700">{{ session('success') }}</div>
+        @endif
+
         <form method="GET" class="mb-4">
             <select name="status" onchange="this.form.submit()" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">
                 <option value="">Semua Status</option>
@@ -60,6 +64,22 @@
                                 @elseif ($zakat->payment_status === 'success')
                                     <a href="{{ route('public.zakat.receipt', $zakat) }}"
                                         class="text-emerald-700 hover:underline">Kuitansi</a>
+                                @endif
+
+                                @if ($zakat->payment_status !== 'success')
+                                    <form id="delete-zakat-{{ $zakat->id }}"
+                                        action="{{ route('public.zakat.destroy', $zakat) }}" method="POST"
+                                        class="hidden">
+                                        @csrf
+                                        @method('DELETE')
+                                        <input type="hidden" name="deletion_reason" id="delete-zakat-{{ $zakat->id }}-reason">
+                                    </form>
+                                    <button type="button" x-data
+                                        @click="$dispatch('open-modal-delete-zakat-{{ $zakat->id }}')"
+                                        class="font-medium text-red-600 hover:underline">Hapus</button>
+                                    <x-delete-reason-modal id="delete-zakat-{{ $zakat->id }}" title="Hapus Riwayat Zakat"
+                                        message="Transaksi zakat ini akan dihapus dari riwayat Anda."
+                                        formId="delete-zakat-{{ $zakat->id }}" />
                                 @endif
                             </td>
                         </tr>

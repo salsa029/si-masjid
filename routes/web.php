@@ -23,6 +23,7 @@ use App\Http\Controllers\Admin\ArticleController;
 use App\Http\Controllers\Admin\EventCategoryController;
 use App\Http\Controllers\Admin\EventController;
 use App\Http\Controllers\Admin\EventDocumentationController;
+use App\Http\Controllers\Admin\QurbanActivityController;
 use App\Http\Controllers\Admin\SacrificialAnimalController;
 use App\Http\Controllers\Admin\SlaughterDocumentationController;
 use App\Http\Controllers\Admin\FinancialReportController;
@@ -80,10 +81,13 @@ Route::get('/kalender-kegiatan/data', [PublicEventController::class, 'calendarDa
 
 // Rute Publik Kurban
 Route::get('/kurban', [QurbanController::class, 'index'])->name('public.qurban.index');
+Route::get('/sertifikat-kurban/verifikasi/{certificateNumber}', [QurbanController::class, 'verifyCertificate'])
+    ->name('public.qurban.certificate-verify');
 Route::get('/kurban/{sacrificialAnimal}', [QurbanController::class, 'show'])->name('public.qurban.show');
 
 // Rute Publik Infaq & Zakat
 Route::get('/infaq', [PublicInfaqController::class, 'index'])->name('public.infaq.index');
+Route::get('/infaq/campaign/{infaqCampaign:slug}', [PublicInfaqController::class, 'campaign'])->name('public.infaq.campaign');
 Route::get('/zakat', [PublicZakatController::class, 'index'])->name('public.zakat.index');
 
 // Redirect calculator ke halaman utama zakat
@@ -129,8 +133,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/', [PublicInfaqController::class, 'store'])->name('store');
         Route::get('/riwayat', [PublicInfaqController::class, 'history'])->name('history');
         Route::get('/{infaq}/bayar', [PublicInfaqController::class, 'pay'])->name('pay');
+        Route::get('/{infaq}/cek-status', [PublicInfaqController::class, 'checkStatus'])->name('check-status');
         Route::get('/{infaq}/kuitansi', [PublicInfaqController::class, 'receipt'])->name('receipt');
         Route::post('/{infaq}/upload-proof', [PublicInfaqController::class, 'uploadProof'])->name('upload-proof');
+        Route::delete('/{infaq}', [PublicInfaqController::class, 'destroy'])->name('destroy');
     });
 
     // ============================================
@@ -140,8 +146,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/', [PublicZakatController::class, 'store'])->name('store');
         Route::get('/riwayat', [PublicZakatController::class, 'history'])->name('history');
         Route::get('/{zakat}/bayar', [PublicZakatController::class, 'pay'])->name('pay');
+        Route::get('/{zakat}/cek-status', [PublicZakatController::class, 'checkStatus'])->name('check-status');
         Route::get('/{zakat}/kuitansi', [PublicZakatController::class, 'receipt'])->name('receipt');
         Route::post('/{zakat}/upload-proof', [PublicZakatController::class, 'uploadProof'])->name('upload-proof');
+        Route::delete('/{zakat}', [PublicZakatController::class, 'destroy'])->name('destroy');
     });
 
     // ============================================
@@ -155,9 +163,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('pesanan-kurban')->name('public.qurban.orders.')->group(function () {
         Route::get('/saya', [QurbanOrderController::class, 'history'])->name('history');
         Route::get('/{qurbanOrder}/bayar', [QurbanOrderController::class, 'pay'])->name('pay');
-        Route::get('/{qurbanOrder}/kuitansi', [QurbanOrderController::class, 'receipt'])->name('receipt');
-        Route::post('/{qurbanOrder}/bukti-pembayaran', [QurbanOrderController::class, 'uploadProof'])->name('upload-proof');
-        Route::get('/{qurbanOrder}/sertifikat', [QurbanOrderController::class, 'certificate'])->name('certificate');
+        Route::get('/{qurbanOrder}/cek-status', [QurbanOrderController::class, 'checkStatus'])->name('check-status');
+        Route::get('/{qurbanOrder}/kuitansi', [QurbanController::class, 'receipt'])->name('receipt');
+        Route::post('/{qurbanOrder}/bukti-pembayaran', [QurbanController::class, 'uploadProof'])->name('upload-proof');
+        Route::get('/{qurbanOrder}/sertifikat', [QurbanController::class, 'certificate'])->name('certificate');
+        Route::delete('/{qurbanOrder}', [QurbanOrderController::class, 'destroy'])->name('destroy');
     });
 });
 
@@ -213,6 +223,9 @@ Route::middleware(['auth', 'verified', 'role:admin'])
             ->name('events.documentations.store');
         Route::delete('/events/{event}/documentations/{documentation}', [EventDocumentationController::class, 'destroy'])
             ->name('events.documentations.destroy');
+
+        // Rute Kelola Qurban Activity (kegiatan/tahun kurban)
+        Route::resource('qurban-activities', QurbanActivityController::class)->except(['show']);
 
         // Rute Kelola Hewan Kurban & Dokumentasi Penyembelihan
         Route::resource('sacrificial-animals', SacrificialAnimalController::class)->except(['show']);

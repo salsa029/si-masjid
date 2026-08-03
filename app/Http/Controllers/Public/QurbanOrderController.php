@@ -4,10 +4,12 @@ namespace App\Http\Controllers\Public;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Public\QurbanOrderRequest;
+use App\Models\DonationSetting;
 use App\Models\QurbanOrder;
 use App\Models\QurbanParticipant;
 use App\Models\SacrificialAnimal;
 use App\Services\MidtransService;
+use App\Services\QurbanService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -18,7 +20,10 @@ use Illuminate\Http\Request;
 
 class QurbanOrderController extends Controller
 {
-    public function __construct(protected MidtransService $midtransService) {}
+    public function __construct(
+        protected MidtransService $midtransService,
+        protected QurbanService $qurbanService,
+    ) {}
 
     public function create(SacrificialAnimal $sacrificialAnimal): View
     {
@@ -94,7 +99,8 @@ class QurbanOrderController extends Controller
         $snapToken = null;
 
         if ($qurbanOrder->payment_status === 'pending') {
-            $snapToken = $this->midtransService->createSnapToken(
+            $snapToken = $this->midtransService->getOrCreateSnapToken(
+                $qurbanOrder,
                 orderId: $qurbanOrder->midtrans_order_id,
                 amount: (int) round($qurbanOrder->total_amount),
                 customerDetails: [
@@ -105,7 +111,54 @@ class QurbanOrderController extends Controller
             );
         }
 
-        return view('public.qurban.orders.pay', compact('qurbanOrder', 'snapToken'));
+        $settings = DonationSetting::firstOrNew();
+
+        return view('public.qurban.orders.pay', compact('qurbanOrder', 'snapToken', 'settings'));
+    }
+
+    /**
+     * Sinkronkan status transaksi langsung ke Midtrans (fallback selain webhook).
+     * Berguna terutama saat development lokal, di mana webhook Midtrans tidak bisa
+     * menjangkau localhost sehingga status tidak pernah otomatis ter-update.
+     */
+    public function checkStatus(QurbanOrder $qurbanOrder): RedirectResponse
+    {
+        if ($qurbanOrder->user_id) {
+            abort_unless($qurbanOrder->user_id === Auth::id(), 403);
+        }
+
+        if ($qurbanOrder->payment_status === 'pending' && $qurbanOrder->payment_method === 'midtrans') {
+            $status = $this->midtransService->getPaymentStatus($qurbanOrder->midtrans_order_id);
+
+            if ($status === 'success') {
+                $this->qurbanService->markOrderAsSuccess($qurbanOrder, 'midtrans');
+            } elseif ($status !== null && $status !== 'pending') {
+                $qurbanOrder->update(['payment_status' => $status]);
+            }
+        }
+
+        return redirect()->route('public.qurban.orders.pay', $qurbanOrder);
+    }
+
+    /**
+     * Hapus pesanan Kurban dari riwayat (hanya yang belum berhasil).
+     */
+    public function destroy(Request $request, QurbanOrder $qurbanOrder): RedirectResponse
+    {
+        abort_unless($qurbanOrder->user_id === Auth::id(), 403);
+        abort_if($qurbanOrder->payment_status === 'success', 403, 'Pesanan yang sudah berhasil tidak dapat dihapus.');
+
+        $validated = $request->validate([
+            'deletion_reason' => ['required', 'string', 'max:500'],
+        ], [
+            'deletion_reason.required' => 'Alasan penghapusan wajib diisi.',
+        ]);
+
+        $qurbanOrder->update(['deletion_reason' => $validated['deletion_reason']]);
+        $qurbanOrder->delete();
+
+        return redirect()->route('public.qurban.orders.history')
+            ->with('success', 'Pesanan kurban berhasil dihapus dari riwayat.');
     }
 
     public function history(Request $request): View

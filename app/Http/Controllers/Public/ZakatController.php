@@ -31,7 +31,7 @@ class ZakatController extends Controller
     public function index(): View
     {
         $zakatTypes = ZakatType::orderBy('name')->get();
-        $settings = DonationSetting::first();
+        $settings = DonationSetting::firstOrNew();
 
         return view('public.zakat.index', compact('zakatTypes', 'settings'));
     }
@@ -41,7 +41,7 @@ class ZakatController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
-        $settings = DonationSetting::first();
+        $settings = DonationSetting::firstOrNew();
         $minAmount = $settings->min_zakat_amount ?? 10000;
 
         $validated = $request->validate([
@@ -89,7 +89,8 @@ class ZakatController extends Controller
         $snapToken = null;
 
         if ($zakat->payment_status === 'pending' && $zakat->payment_method === 'midtrans') {
-            $snapToken = $this->midtransService->createSnapToken(
+            $snapToken = $this->midtransService->getOrCreateSnapToken(
+                $zakat,
                 orderId: $zakat->midtrans_order_id,
                 amount: (int) round($zakat->amount),
                 customerDetails: ['first_name' => Auth::user()->name, 'email' => Auth::user()->email],
@@ -97,9 +98,31 @@ class ZakatController extends Controller
             );
         }
 
-        $settings = DonationSetting::first();
+        $settings = DonationSetting::firstOrNew();
 
         return view('public.zakat.pay', compact('zakat', 'snapToken', 'settings'));
+    }
+
+    /**
+     * Sinkronkan status transaksi langsung ke Midtrans (fallback selain webhook).
+     * Berguna terutama saat development lokal, di mana webhook Midtrans tidak bisa
+     * menjangkau localhost sehingga status tidak pernah otomatis ter-update.
+     */
+    public function checkStatus(Zakat $zakat): RedirectResponse
+    {
+        abort_unless($zakat->user_id === Auth::id(), 403);
+
+        if ($zakat->payment_status === 'pending' && $zakat->payment_method === 'midtrans') {
+            $status = $this->midtransService->getPaymentStatus($zakat->midtrans_order_id);
+
+            if ($status === 'success') {
+                $this->donationService->markAsSuccess($zakat, 'midtrans');
+            } elseif ($status !== null && $status !== 'pending') {
+                $zakat->update(['payment_status' => $status]);
+            }
+        }
+
+        return redirect()->route('public.zakat.pay', $zakat);
     }
 
     /**
@@ -146,6 +169,27 @@ class ZakatController extends Controller
         $pdf = Pdf::loadView('pdf.zakat-receipt', compact('zakat', 'mosqueProfile'));
 
         return $pdf->download('e-kuitansi-' . $zakat->transaction_number . '.pdf');
+    }
+
+    /**
+     * Hapus transaksi Zakat dari riwayat (hanya yang belum berhasil).
+     */
+    public function destroy(Request $request, Zakat $zakat): RedirectResponse
+    {
+        abort_unless($zakat->user_id === Auth::id(), 403);
+        abort_if($zakat->payment_status === 'success', 403, 'Transaksi yang sudah berhasil tidak dapat dihapus.');
+
+        $validated = $request->validate([
+            'deletion_reason' => ['required', 'string', 'max:500'],
+        ], [
+            'deletion_reason.required' => 'Alasan penghapusan wajib diisi.',
+        ]);
+
+        $zakat->update(['deletion_reason' => $validated['deletion_reason']]);
+        $zakat->delete();
+
+        return redirect()->route('public.zakat.history')
+            ->with('success', 'Transaksi zakat berhasil dihapus dari riwayat.');
     }
 
     /**

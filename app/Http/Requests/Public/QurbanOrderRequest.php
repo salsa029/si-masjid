@@ -13,9 +13,11 @@ class QurbanOrderRequest extends FormRequest
 
     public function rules(): array
     {
+        $maxParticipants = $this->route('sacrificialAnimal')?->max_participants ?? 7;
+
         return [
             'order_type' => ['required', 'in:full,patungan'],
-            'slot_number' => ['required_if:order_type,patungan', 'nullable', 'integer', 'min:1', 'max:7'],
+            'slot_number' => ['required_if:order_type,patungan', 'nullable', 'integer', 'min:1', "max:{$maxParticipants}"],
             'payment_method' => ['required', 'in:midtrans,manual_transfer'],
         ];
     }

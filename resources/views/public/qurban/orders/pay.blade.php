@@ -34,20 +34,29 @@
                             <i class="fas fa-credit-card mr-2" aria-hidden="true"></i>
                             Bayar Sekarang
                         </button>
+                        <a href="{{ route('public.qurban.orders.check-status', $qurbanOrder) }}"
+                            class="block text-xs text-gray-400 underline">
+                            Sudah bayar? Cek Status Pembayaran
+                        </a>
                     </div>
                 @elseif($qurbanOrder->payment_status === 'pending' && $qurbanOrder->payment_method === 'manual_transfer')
                     <div class="space-y-4 text-left">
                         <div class="space-y-2 rounded-xl bg-gray-50 p-4 text-sm">
-                            <p class="font-medium text-gray-700">Silakan transfer ke rekening berikut:</p>
-                            <div class="rounded-lg border border-gray-200 bg-white p-3">
-                                <p><span class="text-gray-500">Bank:</span>
-                                    <strong>{{ $settings->bank_name ?? 'BCA' }}</strong></p>
-                                <p><span class="text-gray-500">No. Rekening:</span>
-                                    <strong>{{ $settings->bank_account_number ?? '1234567890' }}</strong></p>
-                                <p><span class="text-gray-500">Atas Nama:</span>
-                                    <strong>{{ $settings->bank_account_name ?? 'Masjid An-Nur' }}</strong></p>
-                            </div>
-                            <p class="text-xs text-gray-400">Cantumkan No. Transaksi di atas sebagai berita transfer.</p>
+                            @if (($settings->bank_account_number ?? null))
+                                <p class="font-medium text-gray-700">Silakan transfer ke rekening berikut:</p>
+                                <div class="rounded-lg border border-gray-200 bg-white p-3">
+                                    <p><span class="text-gray-500">Bank:</span>
+                                        <strong>{{ $settings->bank_name }}</strong></p>
+                                    <p><span class="text-gray-500">No. Rekening:</span>
+                                        <strong>{{ $settings->bank_account_number }}</strong></p>
+                                    <p><span class="text-gray-500">Atas Nama:</span>
+                                        <strong>{{ $settings->bank_account_name }}</strong></p>
+                                </div>
+                                <p class="text-xs text-gray-400">Cantumkan No. Transaksi di atas sebagai berita transfer.</p>
+                            @else
+                                <p class="text-amber-600">Rekening transfer belum diatur oleh Admin. Silakan hubungi
+                                    pengurus masjid untuk info rekening.</p>
+                            @endif
                             <p class="text-xs font-medium text-amber-600">
                                 <i class="fas fa-clock mr-1" aria-hidden="true"></i>
                                 Batas waktu: {{ $qurbanOrder->reserved_until?->translatedFormat('d F Y, H:i') }} WIB
@@ -134,10 +143,10 @@
             document.getElementById('pay-button').addEventListener('click', function() {
                 snap.pay('{{ $snapToken }}', {
                     onSuccess: function() {
-                        window.location.reload();
+                        window.location.href = '{{ route('public.qurban.orders.check-status', $qurbanOrder) }}';
                     },
                     onPending: function() {
-                        window.location.reload();
+                        window.location.href = '{{ route('public.qurban.orders.check-status', $qurbanOrder) }}';
                     },
                     onError: function() {
                         alert('Terjadi kesalahan saat memproses pembayaran. Silakan coba lagi.');

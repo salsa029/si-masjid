@@ -4,8 +4,15 @@
 
 @section('content')
     <div class="mx-auto max-w-3xl px-4 py-10">
-        <img src="{{ Storage::url($infaqCampaign->thumbnail) }}" class="mb-6 h-64 w-full rounded-xl object-cover"
-            alt="{{ $infaqCampaign->title }}">
+        @if ($infaqCampaign->thumbnail)
+            <img src="{{ Storage::url($infaqCampaign->thumbnail) }}" class="mb-6 h-64 w-full rounded-xl object-cover"
+                alt="{{ $infaqCampaign->title }}">
+        @else
+            <div
+                class="mb-6 flex h-64 w-full items-center justify-center rounded-xl bg-gradient-to-br from-green-100 to-green-200">
+                <i class="fas fa-hand-holding-heart text-8xl text-green-400" aria-hidden="true"></i>
+            </div>
+        @endif
         <h1 class="mb-2 text-2xl font-bold text-gray-800">{{ $infaqCampaign->title }}</h1>
         <p class="mb-3 text-sm text-gray-500">Rp {{ number_format($infaqCampaign->collected_amount, 0, ',', '.') }} terkumpul
             dari target Rp {{ number_format($infaqCampaign->target_amount, 0, ',', '.') }}</p>

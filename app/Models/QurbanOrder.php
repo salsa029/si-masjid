@@ -14,12 +14,15 @@ class QurbanOrder extends Model
         'order_type',
         'total_amount',
         'midtrans_order_id',
+        'snap_token',
+        'snap_token_expires_at',
         'invoice_number',
         'certificate_number',
         'payment_status',
         'payment_method',
         'payment_proof',
         'verification_note',
+        'deletion_reason',
         'verified_by',
         'verified_at',
         'reserved_until',
@@ -30,6 +33,7 @@ class QurbanOrder extends Model
         'paid_at' => 'datetime',
         'verified_at' => 'datetime',
         'reserved_until' => 'datetime',
+        'snap_token_expires_at' => 'datetime',
     ];
 
     public function user(): BelongsTo

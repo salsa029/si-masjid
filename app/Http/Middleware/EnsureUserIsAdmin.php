@@ -16,7 +16,7 @@ class EnsureUserIsAdmin
     public function handle(Request $request, Closure $next): Response
     {
         // Memastikan user sudah login dan memiliki role admin
-        if ($request->user() && $request->user()->role === 'admin') {
+        if ($request->user()?->hasRole('admin')) {
             return $next($request);
         }
 

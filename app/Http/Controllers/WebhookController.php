@@ -10,11 +10,17 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Midtrans\Notification;
+use App\Services\DonationService;
+use App\Services\MidtransService;
 use App\Services\QurbanService;
 
 class WebhookController extends Controller
 {
-    public function __construct(protected QurbanService $qurbanService) {}
+    public function __construct(
+        protected QurbanService $qurbanService,
+        protected DonationService $donationService,
+        protected MidtransService $midtransService,
+    ) {}
 
     public function handle(): JsonResponse
     {
@@ -30,7 +36,7 @@ class WebhookController extends Controller
             'fraud_status' => $fraudStatus,
         ]);
 
-        $paymentStatus = $this->mapTransactionStatus($transactionStatus, $fraudStatus);
+        $paymentStatus = $this->midtransService->mapTransactionStatus($transactionStatus, $fraudStatus);
 
         // Routing penanganan transaksi berdasarkan prefiks Order ID
         if (Str::startsWith($orderId, 'INF-')) {
@@ -45,21 +51,6 @@ class WebhookController extends Controller
     }
 
     /**
-     * Memetakan status transaksi dari Midtrans ke status sistem internal.
-     */
-    private function mapTransactionStatus(string $transactionStatus, ?string $fraudStatus): string
-    {
-        return match ($transactionStatus) {
-            'capture' => $fraudStatus === 'accept' ? 'success' : 'pending',
-            'settlement' => 'success',
-            'pending' => 'pending',
-            'deny', 'cancel' => 'failed',
-            'expire' => 'expired',
-            default => 'pending',
-        };
-    }
-
-    /**
      * Menangani pembaruan status untuk transaksi Infaq.
      */
     private function handleInfaq(string $orderId, string $paymentStatus): void
@@ -68,6 +59,11 @@ class WebhookController extends Controller
 
         if (!$infaq) {
             Log::warning("Webhook: Infaq dengan order_id {$orderId} tidak ditemukan.");
+            return;
+        }
+
+        if ($paymentStatus === 'success') {
+            $this->donationService->markAsSuccess($infaq, 'midtrans');
             return;
         }
 
@@ -83,6 +79,11 @@ class WebhookController extends Controller
 
         if (!$zakat) {
             Log::warning("Webhook: Zakat dengan order_id {$orderId} tidak ditemukan.");
+            return;
+        }
+
+        if ($paymentStatus === 'success') {
+            $this->donationService->markAsSuccess($zakat, 'midtrans');
             return;
         }
 

@@ -53,6 +53,14 @@ class ImageUploadService
             throw new \RuntimeException('Gagal memproses gambar.');
         }
 
+        // imagewebp() tidak mendukung palette image (mis. PNG 8-bit/indexed),
+        // jadi selalu konversi ke truecolor dan pertahankan transparansinya.
+        if (!imageistruecolor($image)) {
+            imagepalettetotruecolor($image);
+        }
+        imagealphablending($image, false);
+        imagesavealpha($image, true);
+
         // 5. Resize if width exceeds max width
         $newWidth = $originalWidth;
         $newHeight = $originalHeight;
@@ -65,6 +73,8 @@ class ImageUploadService
 
         if ($newWidth !== $originalWidth || $newHeight !== $originalHeight) {
             $resizedImage = imagecreatetruecolor($newWidth, $newHeight);
+            imagealphablending($resizedImage, false);
+            imagesavealpha($resizedImage, true);
             imagecopyresampled($resizedImage, $image, 0, 0, 0, 0, $newWidth, $newHeight, $originalWidth, $originalHeight);
             imagedestroy($image);
             $image = $resizedImage;

@@ -15,7 +15,7 @@
     <div class="pattern-geometric pointer-events-none fixed inset-0"></div>
 
     <div class="relative w-full max-w-md text-center text-white" data-reveal>
-        <a href="{{ route('public.home') }}" class="mb-8 inline-flex items-center gap-2.5">
+        <a href="{{ route('home') }}" class="mb-8 inline-flex items-center gap-2.5">
             <span class="rounded-arch flex h-11 w-11 items-center justify-center bg-white/15">
                 <svg viewBox="0 0 24 24" class="h-5 w-5" fill="currentColor" aria-hidden="true">
                     <path d="M12 2 3 7v2h18V7L12 2Zm-7 8v9h4v-6h6v6h4v-9H5Z" />
@@ -28,7 +28,7 @@
         <h1 class="font-display mt-3 text-xl font-bold sm:text-2xl">{{ $heading }}</h1>
         <p class="text-primary-50/80 mx-auto mt-3 max-w-sm text-sm leading-relaxed">{{ $message }}</p>
 
-        <a href="{{ route('public.home') }}" class="btn-gold mt-8 inline-flex">Kembali ke Beranda</a>
+        <a href="{{ route('home') }}" class="btn-gold mt-8 inline-flex">Kembali ke Beranda</a>
     </div>
 </body>
 

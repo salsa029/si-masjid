@@ -16,6 +16,8 @@ class Infaq extends Model
         'campaign_id',
         'transaction_number',
         'midtrans_order_id',
+        'snap_token',
+        'snap_token_expires_at',
         'amount',
         'is_anonymous',
         'donor_name',
@@ -24,6 +26,7 @@ class Infaq extends Model
         'payment_proof',
         'payment_status',
         'verification_note',
+        'deletion_reason',
         'verified_by',
         'verified_at',
         'reserved_until',
@@ -35,6 +38,7 @@ class Infaq extends Model
         'paid_at' => 'datetime',
         'verified_at' => 'datetime',
         'reserved_until' => 'datetime',
+        'snap_token_expires_at' => 'datetime',
     ];
 
     public function user()

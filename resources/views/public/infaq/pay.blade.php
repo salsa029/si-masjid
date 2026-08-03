@@ -15,12 +15,21 @@
                     class="mt-6 w-full rounded-lg bg-emerald-700 py-2.5 text-sm font-medium text-white hover:bg-emerald-800">
                     Bayar Sekarang
                 </button>
+                <a href="{{ route('public.infaq.check-status', $infaq) }}"
+                    class="mt-3 block text-xs text-gray-400 underline">
+                    Sudah bayar? Cek Status Pembayaran
+                </a>
             @elseif ($infaq->payment_status === 'pending' && $infaq->payment_method === 'manual_transfer')
                 <div class="mt-6 space-y-1 rounded-lg bg-gray-50 p-4 text-left text-sm">
-                    <p class="font-medium">Silakan transfer ke rekening berikut:</p>
-                    <p>{{ $settings->bank_name }} — <strong>{{ $settings->bank_account_number }}</strong></p>
-                    <p>a.n. {{ $settings->bank_account_name }}</p>
-                    <p class="text-xs text-gray-400">Cantumkan No. Transaksi di atas sebagai berita transfer.</p>
+                    @if ($settings->bank_account_number)
+                        <p class="font-medium">Silakan transfer ke rekening berikut:</p>
+                        <p>{{ $settings->bank_name }} — <strong>{{ $settings->bank_account_number }}</strong></p>
+                        <p>a.n. {{ $settings->bank_account_name }}</p>
+                        <p class="text-xs text-gray-400">Cantumkan No. Transaksi di atas sebagai berita transfer.</p>
+                    @else
+                        <p class="text-amber-600">Rekening transfer belum diatur oleh Admin. Silakan hubungi pengurus
+                            masjid untuk info rekening.</p>
+                    @endif
                     <p class="text-xs text-amber-600">Batas waktu:
                         {{ $infaq->reserved_until?->translatedFormat('d F Y, H:i') }} WIB</p>
                 </div>
@@ -76,10 +85,10 @@
             document.getElementById('pay-button').addEventListener('click', function() {
                 snap.pay('{{ $snapToken }}', {
                     onSuccess: function() {
-                        window.location.reload();
+                        window.location.href = '{{ route('public.infaq.check-status', $infaq) }}';
                     },
                     onPending: function() {
-                        window.location.reload();
+                        window.location.href = '{{ route('public.infaq.check-status', $infaq) }}';
                     },
                     onError: function() {
                         alert('Terjadi kesalahan saat memproses pembayaran.');

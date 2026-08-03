@@ -53,7 +53,7 @@
 
                 <div>
                     <label class="mb-1 block text-sm font-medium text-gray-700">Nominal Infaq (Rp)</label>
-                    <input type="number" name="amount" min="{{ $settings->min_infaq_amount ?? 10000 }}"
+                    <input type="number" name="amount" min="{{ $settings->min_infaq_amount ?? 2000 }}"
                         value="{{ old('amount') }}" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
                         placeholder="Contoh: 50000">
                     @error('amount')

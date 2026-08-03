@@ -21,6 +21,10 @@
                 </a>
             </div>
 
+            @if (session('success'))
+                <div class="mb-6 rounded-xl bg-emerald-50 p-4 text-sm text-emerald-700">{{ session('success') }}</div>
+            @endif
+
             <!-- Filter Status -->
             <div class="mb-6 rounded-2xl bg-white p-4 shadow-md">
                 <form method="GET" class="flex flex-wrap items-end gap-3">
@@ -120,13 +124,13 @@
                                         </span>
                                     </td>
                                     <td class="px-4 py-3 text-right">
-                                        @if (in_array($order->payment_status, ['pending', 'awaiting_verification']))
-                                            <a href="{{ route('public.qurban.orders.pay', $order) }}"
-                                                class="font-medium text-green-600 transition hover:text-green-800">
-                                                Lihat
-                                            </a>
-                                        @elseif($order->payment_status === 'success')
-                                            <div class="flex flex-wrap items-center justify-end gap-2">
+                                        <div class="flex flex-wrap items-center justify-end gap-2">
+                                            @if (in_array($order->payment_status, ['pending', 'awaiting_verification']))
+                                                <a href="{{ route('public.qurban.orders.pay', $order) }}"
+                                                    class="font-medium text-green-600 transition hover:text-green-800">
+                                                    Lihat
+                                                </a>
+                                            @elseif($order->payment_status === 'success')
                                                 <a href="{{ route('public.qurban.orders.receipt', $order) }}"
                                                     class="text-xs font-medium text-green-600 transition hover:text-green-800">
                                                     <i class="fas fa-file-pdf" aria-hidden="true"></i> Kuitansi
@@ -137,10 +141,30 @@
                                                         <i class="fas fa-certificate" aria-hidden="true"></i> Sertifikat
                                                     </a>
                                                 @endif
-                                            </div>
-                                        @else
-                                            <span class="text-gray-400">-</span>
-                                        @endif
+                                            @else
+                                                <span class="text-gray-400">-</span>
+                                            @endif
+
+                                            @if ($order->payment_status !== 'success')
+                                                <form id="delete-qurban-order-{{ $order->id }}"
+                                                    action="{{ route('public.qurban.orders.destroy', $order) }}"
+                                                    method="POST" class="hidden">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <input type="hidden" name="deletion_reason"
+                                                        id="delete-qurban-order-{{ $order->id }}-reason">
+                                                </form>
+                                                <button type="button" x-data
+                                                    @click="$dispatch('open-modal-delete-qurban-order-{{ $order->id }}')"
+                                                    class="font-medium text-red-600 transition hover:text-red-800">
+                                                    Hapus
+                                                </button>
+                                                <x-delete-reason-modal id="delete-qurban-order-{{ $order->id }}"
+                                                    title="Hapus Riwayat Pesanan Kurban"
+                                                    message="Pesanan kurban ini akan dihapus dari riwayat Anda."
+                                                    formId="delete-qurban-order-{{ $order->id }}" />
+                                            @endif
+                                        </div>
                                     </td>
                                 </tr>
                             @empty

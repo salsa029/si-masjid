@@ -15,6 +15,8 @@ class Zakat extends Model
         'zakat_type_id',
         'transaction_number',
         'midtrans_order_id',
+        'snap_token',
+        'snap_token_expires_at',
         'muzakki_name',
         'number_of_souls',
         'calculation_base',
@@ -26,6 +28,7 @@ class Zakat extends Model
         'payment_proof',
         'payment_status',
         'verification_note',
+        'deletion_reason',
         'verified_by',
         'verified_at',
         'reserved_until',
@@ -38,6 +41,7 @@ class Zakat extends Model
         'paid_at' => 'datetime',
         'verified_at' => 'datetime',
         'reserved_until' => 'datetime',
+        'snap_token_expires_at' => 'datetime',
     ];
 
     public function user()
