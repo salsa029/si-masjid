@@ -25,9 +25,6 @@
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
 
-    <!-- Alpine.js -->
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.3/dist/cdn.min.js"></script>
-
     <style>
         /* ================================================================
            RESET & BASE
@@ -262,104 +259,6 @@
                     });
                 });
             }
-
-            // ============================================================
-            // PRAYER TIMES
-            // ============================================================
-            const PRAYER_SCHEDULES = [{
-                    name: 'Subuh',
-                    time: '04:30'
-                },
-                {
-                    name: 'Dzuhur',
-                    time: '11:45'
-                },
-                {
-                    name: 'Ashar',
-                    time: '15:00'
-                },
-                {
-                    name: 'Maghrib',
-                    time: '18:30'
-                },
-                {
-                    name: 'Isya',
-                    time: '19:45'
-                }
-            ];
-
-            function getCurrentPrayerIndex(timeStr) {
-                for (let i = PRAYER_SCHEDULES.length - 1; i >= 0; i--) {
-                    if (timeStr >= PRAYER_SCHEDULES[i].time) return i;
-                }
-                return PRAYER_SCHEDULES.length - 1;
-            }
-
-            function formatTime(date) {
-                return date.getHours().toString().padStart(2, '0') + ':' +
-                    date.getMinutes().toString().padStart(2, '0');
-            }
-
-            function updatePrayerDisplay() {
-                const now = new Date();
-                const currentTime = formatTime(now);
-                const currentIdx = getCurrentPrayerIndex(currentTime);
-                const nextIdx = (currentIdx + 1) % PRAYER_SCHEDULES.length;
-
-                // Update prayer cards
-                const container = document.getElementById('prayer-times-container');
-                if (container) {
-                    container.innerHTML = PRAYER_SCHEDULES.map((prayer, idx) => {
-                        const isActive = idx === currentIdx;
-                        return `
-                            <div class="prayer-card rounded-xl p-3 text-center backdrop-blur-sm ${isActive ? 'active-prayer' : 'bg-green-800/40'}">
-                                <p class="text-xs text-green-200">${prayer.name}</p>
-                                <p class="text-lg font-bold text-white">${prayer.time}</p>
-                                ${isActive ? '<span class="text-[10px] text-yellow-200">● Sekarang</span>' : ''}
-                            </div>
-                        `;
-                    }).join('');
-                }
-
-                // Update current and next prayer info
-                const currentPrayer = PRAYER_SCHEDULES[currentIdx];
-                const nextPrayer = PRAYER_SCHEDULES[nextIdx];
-
-                const currentNameEl = document.getElementById('current-prayer-name');
-                const currentTimeEl = document.getElementById('current-prayer-time');
-                const nextInfoEl = document.getElementById('next-prayer-info');
-                const dateEl = document.getElementById('prayer-date');
-                const footerTimes = document.getElementById('footer-prayer-times');
-
-                if (currentNameEl) currentNameEl.textContent = currentPrayer.name;
-                if (currentTimeEl) currentTimeEl.textContent = currentPrayer.time;
-                if (nextInfoEl) {
-                    nextInfoEl.textContent = `Berikutnya: ${nextPrayer.name} ${nextPrayer.time}`;
-                }
-
-                if (dateEl) {
-                    const dateOptions = {
-                        weekday: 'long',
-                        day: 'numeric',
-                        month: 'long',
-                        year: 'numeric'
-                    };
-                    dateEl.textContent = `Waktu Sholat Hari Ini - ${now.toLocaleDateString('id-ID', dateOptions)}`;
-                }
-
-                if (footerTimes) {
-                    footerTimes.innerHTML = PRAYER_SCHEDULES.map(p => `
-                        <li class="flex justify-between">
-                            <span class="text-green-200">${p.name}</span>
-                            <span class="text-white">${p.time}</span>
-                        </li>
-                    `).join('');
-                }
-            }
-
-            // Initial prayer display
-            updatePrayerDisplay();
-            setInterval(updatePrayerDisplay, 30000);
 
             // ============================================================
             // SMOOTH SCROLL FOR NAV LINKS

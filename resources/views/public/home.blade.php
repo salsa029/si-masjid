@@ -595,10 +595,17 @@
                     date.getMinutes().toString().padStart(2, '0');
             }
 
-            // Refresh dari API
+            // Refresh dari API (paksa ambil data terbaru, lewati cache 12 jam di server)
             async function refreshPrayerTimes() {
                 try {
-                    const response = await fetch('/api/prayer/times');
+                    const response = await fetch('/api/prayer/refresh', {
+                        method: 'POST',
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,
+                            'X-Requested-With': 'XMLHttpRequest',
+                        },
+                    });
                     const result = await response.json();
 
                     if (result.success) {

@@ -6,9 +6,11 @@ import "../css/app.css";
 // ============================================================
 import Alpine from "alpinejs";
 import focus from "@alpinejs/focus";
+import collapse from "@alpinejs/collapse";
 
 window.Alpine = Alpine;
 Alpine.plugin(focus);
+Alpine.plugin(collapse);
 Alpine.start();
 
 // ============================================================
@@ -17,106 +19,6 @@ Alpine.start();
 import axios from "axios";
 window.axios = axios;
 window.axios.defaults.headers.common["X-Requested-With"] = "XMLHttpRequest";
-
-// ============================================================
-// PRAYER TIMES DATA
-// ============================================================
-const PRAYER_SCHEDULES = [
-    { name: "Subuh", time: "04:30" },
-    { name: "Dzuhur", time: "11:45" },
-    { name: "Ashar", time: "15:00" },
-    { name: "Maghrib", time: "18:30" },
-    { name: "Isya", time: "19:45" },
-];
-
-// ============================================================
-// PRAYER TIMES FUNCTIONS
-// ============================================================
-function getCurrentPrayerIndex(timeStr) {
-    for (let i = PRAYER_SCHEDULES.length - 1; i >= 0; i--) {
-        if (timeStr >= PRAYER_SCHEDULES[i].time) return i;
-    }
-    return PRAYER_SCHEDULES.length - 1;
-}
-
-function formatTime(date) {
-    return (
-        date.getHours().toString().padStart(2, "0") +
-        ":" +
-        date.getMinutes().toString().padStart(2, "0")
-    );
-}
-
-function updatePrayerDisplay() {
-    const now = new Date();
-    const currentTime = formatTime(now);
-    const currentIdx = getCurrentPrayerIndex(currentTime);
-    const nextIdx = (currentIdx + 1) % PRAYER_SCHEDULES.length;
-
-    // Update prayer cards
-    const container = document.getElementById("prayer-times-container");
-    if (container) {
-        container.innerHTML = PRAYER_SCHEDULES.map((prayer, idx) => {
-            const isActive = idx === currentIdx;
-            return `
-                <div class="prayer-card rounded-xl p-3 text-center backdrop-blur-sm ${
-                    isActive ? "active-prayer" : "bg-green-800/40"
-                }">
-                    <p class="text-xs text-green-200">${prayer.name}</p>
-                    <p class="text-lg font-bold text-white">${prayer.time}</p>
-                    ${
-                        isActive
-                            ? '<span class="text-[10px] text-yellow-200">● Sekarang</span>'
-                            : ""
-                    }
-                </div>
-            `;
-        }).join("");
-    }
-
-    // Update current and next prayer info
-    const currentPrayer = PRAYER_SCHEDULES[currentIdx];
-    const nextPrayer = PRAYER_SCHEDULES[nextIdx];
-
-    const elements = {
-        currentName: document.getElementById("current-prayer-name"),
-        currentTime: document.getElementById("current-prayer-time"),
-        nextInfo: document.getElementById("next-prayer-info"),
-        date: document.getElementById("prayer-date"),
-        footer: document.getElementById("footer-prayer-times"),
-    };
-
-    if (elements.currentName) {
-        elements.currentName.textContent = currentPrayer.name;
-    }
-    if (elements.currentTime) {
-        elements.currentTime.textContent = currentPrayer.time;
-    }
-    if (elements.nextInfo) {
-        elements.nextInfo.textContent = `Berikutnya: ${nextPrayer.name} ${nextPrayer.time}`;
-    }
-
-    if (elements.date) {
-        const dateOptions = {
-            weekday: "long",
-            day: "numeric",
-            month: "long",
-            year: "numeric",
-        };
-        elements.date.textContent = `Waktu Sholat Hari Ini - ${now.toLocaleDateString("id-ID", dateOptions)}`;
-    }
-
-    if (elements.footer) {
-        elements.footer.innerHTML = PRAYER_SCHEDULES.map(
-            (p) => `
-                <li class="flex justify-between">
-                    <span class="text-green-200">${p.name}</span>
-                    <span class="text-white">${p.time}</span>
-                </li>
-            `,
-        ).join("");
-    }
-}
 
 // ============================================================
 // NAVBAR FUNCTIONS
@@ -215,23 +117,6 @@ function initActiveNavLink() {
 }
 
 // ============================================================
-// PRAYER REFRESH BUTTON
-// ============================================================
-function initPrayerRefresh() {
-    const refreshPrayerBtn = document.getElementById("refresh-prayer");
-    if (refreshPrayerBtn) {
-        refreshPrayerBtn.addEventListener("click", function () {
-            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-            setTimeout(() => {
-                this.innerHTML =
-                    '<i class="fas fa-sync-alt"></i> <span class="hidden sm:inline">Perbarui</span>';
-                updatePrayerDisplay();
-            }, 1500);
-        });
-    }
-}
-
-// ============================================================
 // DONATION HANDLER
 // ============================================================
 function initDonationHandler() {
@@ -301,10 +186,6 @@ function showConsoleWelcome() {
 document.addEventListener("DOMContentLoaded", function () {
     "use strict";
 
-    // ===== PRAYER TIMES =====
-    updatePrayerDisplay();
-    setInterval(updatePrayerDisplay, 30000);
-
     // ===== NAVBAR =====
     initNavbar();
 
@@ -319,9 +200,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // ===== ACTIVE NAV LINK =====
     initActiveNavLink();
-
-    // ===== PRAYER REFRESH =====
-    initPrayerRefresh();
 
     // ===== DONATION HANDLER =====
     initDonationHandler();

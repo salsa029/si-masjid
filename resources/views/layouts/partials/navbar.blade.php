@@ -8,16 +8,11 @@ NAVBAR
         <div class="flex items-center justify-between py-3 md:py-4">
             <!-- ===== LOGO ===== -->
             <a href="{{ route('home') }}" class="group flex items-center" aria-label="Beranda">
-                <div
-                    class="mr-3 flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-green-600 to-green-800 text-white shadow-lg transition-transform group-hover:scale-105">
-                    <i class="fas fa-mosque text-xl" aria-hidden="true"></i>
-                </div>
-                <span class="text-xl font-extrabold text-green-800 md:text-2xl">
-                    @php
-                        $mosque = \App\Models\MosqueProfile::first();
-                    @endphp
-                    {{ $mosque->name ?? 'MASJID' }}
-                </span>
+                @php
+                    $mosque = \App\Models\MosqueProfile::first();
+                @endphp
+                <img src="{{ asset('images/logo-annur.png') }}" alt="{{ $mosque->name ?? 'Masjid An-Nur' }}"
+                    class="h-10 w-auto transition-transform group-hover:scale-105 md:h-12">
             </a>
 
             <!-- ===== DESKTOP NAVIGATION ===== -->
