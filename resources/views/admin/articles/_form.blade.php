@@ -154,9 +154,18 @@
             },
         });
 
-        // Setiap kali form disubmit, salin isi HTML dari Quill ke textarea
-        document.querySelector('form').addEventListener('submit', function() {
-            document.querySelector('#content-input').value = quill.root.innerHTML;
+        const contentInput = document.getElementById('content-input');
+
+        // Salin isi HTML dari Quill ke textarea setiap kali diketik (agar selalu tersinkron)
+        quill.on('text-change', function() {
+            contentInput.value = quill.root.innerHTML;
+        });
+
+        // Jaga-jaga: salin ulang tepat sebelum form disubmit.
+        // Dicari lewat closest('form') dari editornya sendiri, BUKAN document.querySelector('form'),
+        // karena form pertama di halaman admin adalah form "Keluar" di header, bukan form artikel ini.
+        contentInput.closest('form').addEventListener('submit', function() {
+            contentInput.value = quill.root.innerHTML;
         });
     });
 </script>
