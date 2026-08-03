@@ -58,35 +58,18 @@
             <thead
                 class="border-b border-gray-100 bg-gray-50/80 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
                 <tr>
+                    <th class="px-5 py-4">Aksi</th>
                     <th class="px-5 py-4">Foto</th>
                     <th class="px-5 py-4">Nama</th>
                     <th class="px-5 py-4">Jabatan</th>
                     <th class="px-5 py-4">Masa Jabatan</th>
-                    <th class="px-5 py-4 text-right">Aksi</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-100">
                 @forelse ($committees as $committee)
                     <tr class="transition-colors hover:bg-emerald-50/40">
                         <td class="px-5 py-3.5">
-                            @if ($committee->photo)
-                                <img src="{{ Storage::url($committee->photo) }}"
-                                    class="h-10 w-10 rounded-full object-cover shadow-sm ring-2 ring-white">
-                            @else
-                                <div
-                                    class="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-300">
-                                    <i class="fas fa-user"></i>
-                                </div>
-                            @endif
-                        </td>
-                        <td class="px-5 py-3.5 font-medium text-gray-800">{{ $committee->name }}</td>
-                        <td class="px-5 py-3.5 text-gray-600">{{ $committee->position }}</td>
-                        <td class="px-5 py-3.5 text-gray-500">
-                            {{ $committee->term_start?->format('d/m/Y') ?? '-' }} s/d
-                            {{ $committee->term_end?->format('d/m/Y') ?? '-' }}
-                        </td>
-                        <td class="px-5 py-3.5 text-right">
-                            <div class="flex items-center justify-end gap-1.5">
+                            <div class="flex items-center gap-1.5">
                                 <a href="{{ route('admin.committees.edit', $committee) }}"
                                     class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-emerald-700 transition hover:bg-emerald-100 hover:text-emerald-800"
                                     title="Ubah">
@@ -104,6 +87,23 @@
                                     message="Data pengurus ini akan dipindahkan ke Sampah. Lanjutkan?"
                                     formId="delete-committee-{{ $committee->id }}" />
                             </div>
+                        </td>
+                        <td class="px-5 py-3.5">
+                            @if ($committee->photo)
+                                <img src="{{ Storage::url($committee->photo) }}"
+                                    class="h-10 w-10 rounded-full object-cover shadow-sm ring-2 ring-white">
+                            @else
+                                <div
+                                    class="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-300">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                            @endif
+                        </td>
+                        <td class="px-5 py-3.5 font-medium text-gray-800">{{ $committee->name }}</td>
+                        <td class="px-5 py-3.5 text-gray-600">{{ $committee->position }}</td>
+                        <td class="px-5 py-3.5 text-gray-500">
+                            {{ $committee->term_start?->format('d/m/Y') ?? '-' }} s/d
+                            {{ $committee->term_end?->format('d/m/Y') ?? '-' }}
                         </td>
                     </tr>
                 @empty

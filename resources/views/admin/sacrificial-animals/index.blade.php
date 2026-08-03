@@ -103,18 +103,37 @@
             <thead
                 class="border-b border-gray-100 bg-gray-50/80 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
                 <tr>
+                    <th class="px-5 py-4">Aksi</th>
                     <th class="px-5 py-4">Nama/Kode</th>
                     <th class="px-5 py-4">Jenis</th>
                     <th class="px-5 py-4">Bobot</th>
                     <th class="px-5 py-4">Harga</th>
                     <th class="px-5 py-4">Status</th>
                     <th class="px-5 py-4">Dokumentasi</th>
-                    <th class="px-5 py-4 text-right">Aksi</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-100">
                 @forelse ($animals as $animal)
                     <tr class="transition-colors hover:bg-emerald-50/40">
+                        <td class="px-5 py-3.5">
+                            <div class="flex items-center gap-1.5">
+                                <a href="{{ route('admin.sacrificial-animals.edit', $animal) }}"
+                                    class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-emerald-700 transition hover:bg-emerald-100 hover:text-emerald-800"
+                                    title="Ubah">
+                                    <i class="fas fa-pen"></i>
+                                </a>
+                                <form id="delete-animal-{{ $animal->id }}"
+                                    action="{{ route('admin.sacrificial-animals.destroy', $animal) }}" method="POST"
+                                    class="hidden">
+                                    @csrf @method('DELETE')
+                                </form>
+                                <button type="button" @click="$dispatch('open-modal-delete-animal-{{ $animal->id }}')"
+                                    class="font-medium text-red-600">Hapus</button>
+                                <x-confirm-modal id="delete-animal-{{ $animal->id }}" title="Hapus Hewan Kurban"
+                                    message="Data hewan kurban ini akan dipindahkan ke Sampah. Lanjutkan?"
+                                    formId="delete-animal-{{ $animal->id }}" />
+                            </div>
+                        </td>
                         <td class="px-5 py-3.5 font-medium text-gray-800">{{ $animal->name }}</td>
                         <td class="px-5 py-3.5 capitalize text-gray-600">{{ $animal->animal_type }}</td>
                         <td class="px-5 py-3.5 text-gray-600">{{ $animal->weight }} kg</td>
@@ -141,25 +160,6 @@
                                 <i class="fas fa-image text-gray-300"></i>
                                 {{ $animal->documentations_count }} foto
                             </span>
-                        </td>
-                        <td class="px-5 py-3.5 text-right">
-                            <div class="flex items-center justify-end gap-1.5">
-                                <a href="{{ route('admin.sacrificial-animals.edit', $animal) }}"
-                                    class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-emerald-700 transition hover:bg-emerald-100 hover:text-emerald-800"
-                                    title="Ubah">
-                                    <i class="fas fa-pen"></i>
-                                </a>
-                                <form id="delete-animal-{{ $animal->id }}"
-                                    action="{{ route('admin.sacrificial-animals.destroy', $animal) }}" method="POST"
-                                    class="hidden">
-                                    @csrf @method('DELETE')
-                                </form>
-                                <button type="button" @click="$dispatch('open-modal-delete-animal-{{ $animal->id }}')"
-                                    class="font-medium text-red-600">Hapus</button>
-                                <x-confirm-modal id="delete-animal-{{ $animal->id }}" title="Hapus Hewan Kurban"
-                                    message="Data hewan kurban ini akan dipindahkan ke Sampah. Lanjutkan?"
-                                    formId="delete-animal-{{ $animal->id }}" />
-                            </div>
                         </td>
                     </tr>
                 @empty

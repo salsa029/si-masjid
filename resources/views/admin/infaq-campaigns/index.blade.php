@@ -15,16 +15,26 @@
         <table class="w-full text-sm">
             <thead class="bg-gray-50 text-left text-gray-500">
                 <tr>
+                    <th class="px-5 py-3">Aksi</th>
                     <th class="px-5 py-3">Judul</th>
                     <th class="px-5 py-3">Kategori</th>
                     <th class="px-5 py-3">Progress Dana</th>
                     <th class="px-5 py-3">Status</th>
-                    <th class="px-5 py-3 text-right">Aksi</th>
                 </tr>
             </thead>
             <tbody>
                 @forelse ($campaigns as $campaign)
                     <tr class="border-t border-gray-100">
+                        <td class="space-x-2 px-5 py-3">
+                            <a href="{{ route('admin.infaq-campaigns.edit', $campaign) }}"
+                                class="text-emerald-700 hover:underline">Ubah</a>
+                            <form action="{{ route('admin.infaq-campaigns.destroy', $campaign) }}" method="POST"
+                                class="inline" onsubmit="return confirm('Yakin ingin menghapus campaign ini?');">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="text-red-600 hover:underline">Hapus</button>
+                            </form>
+                        </td>
                         <td class="px-5 py-3 font-medium">{{ $campaign->title }}</td>
                         <td class="px-5 py-3 text-gray-500">{{ $campaign->category?->name ?? '-' }}</td>
                         <td class="w-64 px-5 py-3">
@@ -48,16 +58,6 @@
                             @endphp
                             <span
                                 class="{{ $color }} rounded-full px-2 py-1 text-xs font-medium">{{ $label }}</span>
-                        </td>
-                        <td class="space-x-2 px-5 py-3 text-right">
-                            <a href="{{ route('admin.infaq-campaigns.edit', $campaign) }}"
-                                class="text-emerald-700 hover:underline">Ubah</a>
-                            <form action="{{ route('admin.infaq-campaigns.destroy', $campaign) }}" method="POST"
-                                class="inline" onsubmit="return confirm('Yakin ingin menghapus campaign ini?');">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="text-red-600 hover:underline">Hapus</button>
-                            </form>
                         </td>
                     </tr>
                 @empty

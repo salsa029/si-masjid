@@ -92,8 +92,8 @@
             <thead
                 class="border-b border-gray-100 bg-gray-50/80 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
                 <tr>
-                    <th class="px-5 py-4">#</th>
                     <th class="px-5 py-4">Aksi</th>
+                    <th class="px-5 py-4">#</th>
                     <th class="px-5 py-4">Judul</th>
                     <th class="px-5 py-4">Kategori</th>
                     <th class="px-5 py-4">Penulis</th>
@@ -105,9 +105,6 @@
             <tbody class="divide-y divide-gray-100">
                 @forelse ($articles as $article)
                     <tr class="transition-colors hover:bg-emerald-50/40">
-                        <td class="px-5 py-4 text-gray-400">
-                            {{ $loop->iteration + ($articles->currentPage() - 1) * $articles->perPage() }}
-                        </td>
                         <td class="px-5 py-4">
                             <div class="flex items-center gap-1.5">
                                 <a href="{{ route('admin.articles.edit', $article) }}"
@@ -125,6 +122,9 @@
                                     message="Artikel &quot;{{ $article->title }}&quot; akan dipindahkan ke Sampah. Lanjutkan?"
                                     formId="delete-article-{{ $article->id }}" />
                             </div>
+                        </td>
+                        <td class="px-5 py-4 text-gray-400">
+                            {{ $loop->iteration + ($articles->currentPage() - 1) * $articles->perPage() }}
                         </td>
                         <td class="px-5 py-4 font-medium text-gray-800">{{ $article->title }}</td>
                         <td class="px-5 py-4 text-gray-500">{{ $article->category?->name ?? '-' }}</td>

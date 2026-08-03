@@ -19,19 +19,16 @@
         <table class="w-full text-sm">
             <thead class="bg-gray-50 text-left text-gray-500">
                 <tr>
+                    <th class="px-5 py-3">Aksi</th>
                     <th class="px-5 py-3">Nama Kategori</th>
                     <th class="px-5 py-3">Slug</th>
                     <th class="px-5 py-3">Jumlah Transaksi Infaq</th>
-                    <th class="px-5 py-3 text-right">Aksi</th>
                 </tr>
             </thead>
             <tbody>
                 @forelse ($infaqCategories as $category)
                     <tr class="border-t border-gray-100">
-                        <td class="px-5 py-3 font-medium">{{ $category->name }}</td>
-                        <td class="px-5 py-3 text-gray-500">{{ $category->slug }}</td>
-                        <td class="px-5 py-3">{{ $category->infaqs_count }}</td>
-                        <td class="space-x-2 px-5 py-3 text-right">
+                        <td class="space-x-2 px-5 py-3">
                             <a href="{{ route('admin.infaq-categories.edit', $category) }}"
                                 class="text-emerald-700 hover:underline">Ubah</a>
                             <form action="{{ route('admin.infaq-categories.destroy', $category) }}" method="POST"
@@ -41,6 +38,9 @@
                                 <button type="submit" class="text-red-600 hover:underline">Hapus</button>
                             </form>
                         </td>
+                        <td class="px-5 py-3 font-medium">{{ $category->name }}</td>
+                        <td class="px-5 py-3 text-gray-500">{{ $category->slug }}</td>
+                        <td class="px-5 py-3">{{ $category->infaqs_count }}</td>
                     </tr>
                 @empty
                     <tr>

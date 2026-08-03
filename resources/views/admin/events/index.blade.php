@@ -71,18 +71,36 @@
             <thead
                 class="border-b border-gray-100 bg-gray-50/80 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
                 <tr>
+                    <th class="px-5 py-4">Aksi</th>
                     <th class="px-5 py-4">Judul</th>
                     <th class="px-5 py-4">Kategori</th>
                     <th class="px-5 py-4">Jadwal</th>
                     <th class="px-5 py-4">Waktu</th>
                     <th class="px-5 py-4">Publikasi</th>
                     <th class="px-5 py-4">Dilihat</th>
-                    <th class="px-5 py-4 text-right">Aksi</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-100">
                 @forelse ($events as $event)
                     <tr class="transition-colors hover:bg-emerald-50/40">
+                        <td class="px-5 py-4">
+                            <div class="flex items-center gap-1.5">
+                                <a href="{{ route('admin.events.edit', $event) }}"
+                                    class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-emerald-700 transition hover:bg-emerald-100 hover:text-emerald-800"
+                                    title="Ubah">
+                                    <i class="fas fa-pen"></i>
+                                </a>
+                                <form id="delete-event-{{ $event->id }}"
+                                    action="{{ route('admin.events.destroy', $event) }}" method="POST" class="hidden">
+                                    @csrf @method('DELETE')
+                                </form>
+                                <button type="button" @click="$dispatch('open-modal-delete-event-{{ $event->id }}')"
+                                    class="font-medium text-red-600">Hapus</button>
+                                <x-confirm-modal id="delete-event-{{ $event->id }}" title="Hapus Kegiatan"
+                                    message="Kegiatan &quot;{{ $event->title }}&quot; akan dipindahkan ke Sampah. Lanjutkan?"
+                                    formId="delete-event-{{ $event->id }}" />
+                            </div>
+                        </td>
                         <td class="px-5 py-4 font-medium text-gray-800">
                             {{ $event->title }}
                             @if ($event->is_featured)
@@ -113,24 +131,6 @@
                             @endif
                         </td>
                         <td class="px-5 py-4 text-gray-500">{{ number_format($event->views_count) }}x</td>
-                        <td class="px-5 py-4 text-right">
-                            <div class="flex items-center justify-end gap-1.5">
-                                <a href="{{ route('admin.events.edit', $event) }}"
-                                    class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-emerald-700 transition hover:bg-emerald-100 hover:text-emerald-800"
-                                    title="Ubah">
-                                    <i class="fas fa-pen"></i>
-                                </a>
-                                <form id="delete-event-{{ $event->id }}"
-                                    action="{{ route('admin.events.destroy', $event) }}" method="POST" class="hidden">
-                                    @csrf @method('DELETE')
-                                </form>
-                                <button type="button" @click="$dispatch('open-modal-delete-event-{{ $event->id }}')"
-                                    class="font-medium text-red-600">Hapus</button>
-                                <x-confirm-modal id="delete-event-{{ $event->id }}" title="Hapus Kegiatan"
-                                    message="Kegiatan &quot;{{ $event->title }}&quot; akan dipindahkan ke Sampah. Lanjutkan?"
-                                    formId="delete-event-{{ $event->id }}" />
-                            </div>
-                        </td>
                     </tr>
                 @empty
                     <tr>

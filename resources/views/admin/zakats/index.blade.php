@@ -54,18 +54,50 @@
         <table class="w-full text-sm">
             <thead class="bg-gray-50 text-left text-gray-500">
                 <tr>
+                    <th class="px-5 py-3">Aksi</th>
                     <th class="px-5 py-3">No. Transaksi</th>
                     <th class="px-5 py-3">Muzakki</th>
                     <th class="px-5 py-3">Jenis Zakat</th>
                     <th class="px-5 py-3">Nominal</th>
                     <th class="px-5 py-3">Status</th>
                     <th class="px-5 py-3">Tanggal</th>
-                    <th class="px-5 py-3 text-center">Aksi</th>
                 </tr>
             </thead>
             <tbody>
                 @forelse($zakats as $zakat)
                     <tr class="border-t border-gray-100">
+                        <td class="px-5 py-3">
+                            <div class="flex items-center gap-2">
+                                @if ($zakat->payment_status === 'awaiting_verification' && $zakat->payment_method === 'manual_transfer')
+                                    <a href="{{ route('admin.donation-verifications.zakat.show', $zakat) }}"
+                                        class="font-medium text-emerald-700 hover:underline">
+                                        Tinjau Bukti
+                                    </a>
+
+                                    {{-- Form dan Tombol Setujui --}}
+                                    <form id="approve-zakat-{{ $zakat->id }}"
+                                        action="{{ route('admin.donation-verifications.zakat.approve', $zakat) }}"
+                                        method="POST" class="hidden">
+                                        @csrf
+                                        @method('PUT')
+                                    </form>
+                                    <button type="button"
+                                        @click="$dispatch('open-modal-approve-zakat-{{ $zakat->id }}')"
+                                        class="font-medium text-emerald-600 transition-colors hover:text-emerald-800">
+                                        Setujui
+                                    </button>
+                                    <x-confirm-modal id="approve-zakat-{{ $zakat->id }}" title="Setujui Zakat"
+                                        message="Konfirmasi zakat sebesar Rp {{ number_format($zakat->amount, 0, ',', '.') }} sebagai berhasil?"
+                                        formId="approve-zakat-{{ $zakat->id }}" />
+                                @elseif ($zakat->payment_method === 'midtrans' && $zakat->payment_status === 'pending')
+                                    <span class="text-xs text-gray-400">Menunggu pembayaran</span>
+                                @elseif ($zakat->payment_method === 'manual_transfer' && $zakat->payment_status === 'pending')
+                                    <span class="text-xs text-gray-400">Menunggu bukti transfer</span>
+                                @else
+                                    <span class="text-xs text-gray-400">Tidak ada aksi</span>
+                                @endif
+                            </div>
+                        </td>
                         <td class="px-5 py-3">{{ $zakat->transaction_number }}</td>
                         <td class="px-5 py-3">{{ $zakat->display_name }}</td>
                         <td class="px-5 py-3">{{ $zakat->zakatType->name }}</td>
@@ -89,43 +121,6 @@
                                 class="{{ $color }} rounded-full px-2 py-1 text-xs font-medium">{{ $label }}</span>
                         </td>
                         <td class="px-5 py-3 text-gray-500">{{ $zakat->created_at->format('d/m/Y H:i') }}</td>
-                        <td class="px-5 py-3">
-                            <div class="flex items-center justify-center gap-2">
-                                @if (in_array($zakat->payment_status, ['pending', 'awaiting_verification']))
-                                    {{-- Form dan Tombol Setujui --}}
-                                    <form id="approve-zakat-{{ $zakat->id }}"
-                                        action="{{ route('admin.zakats.approve', $zakat) }}" method="POST" class="hidden">
-                                        @csrf
-                                        @method('PATCH')
-                                    </form>
-                                    <button type="button"
-                                        @click="$dispatch('open-modal-approve-zakat-{{ $zakat->id }}')"
-                                        class="font-medium text-emerald-600 transition-colors hover:text-emerald-800">
-                                        Setujui
-                                    </button>
-                                    <x-confirm-modal id="approve-zakat-{{ $zakat->id }}" title="Setujui Zakat"
-                                        message="Konfirmasi zakat sebesar Rp {{ number_format($zakat->amount, 0, ',', '.') }} sebagai berhasil?"
-                                        formId="approve-zakat-{{ $zakat->id }}" />
-
-                                    {{-- Form dan Tombol Tolak --}}
-                                    <form id="reject-zakat-{{ $zakat->id }}"
-                                        action="{{ route('admin.zakats.reject', $zakat) }}" method="POST" class="hidden">
-                                        @csrf
-                                        @method('PATCH')
-                                    </form>
-                                    <button type="button"
-                                        @click="$dispatch('open-modal-reject-zakat-{{ $zakat->id }}')"
-                                        class="font-medium text-red-600 transition-colors hover:text-red-800">
-                                        Tolak
-                                    </button>
-                                    <x-confirm-modal id="reject-zakat-{{ $zakat->id }}" title="Tolak Zakat"
-                                        message="Tolak konfirmasi zakat ini? Status akan diubah menjadi Gagal."
-                                        formId="reject-zakat-{{ $zakat->id }}" />
-                                @else
-                                    <span class="text-xs text-gray-400">Tidak ada aksi</span>
-                                @endif
-                            </div>
-                        </td>
                     </tr>
                 @empty
                     <tr>

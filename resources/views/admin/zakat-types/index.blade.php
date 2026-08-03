@@ -19,27 +19,18 @@
         <table class="w-full text-sm">
             <thead class="bg-gray-50 text-left text-gray-500">
                 <tr>
+                    <th class="px-5 py-3">Aksi</th>
                     <th class="px-5 py-3">Nama</th>
                     <th class="px-5 py-3">Cara Perhitungan</th>
                     <th class="px-5 py-3">Nishab</th>
                     <th class="px-5 py-3">Persentase</th>
                     <th class="px-5 py-3">Jumlah Transaksi</th>
-                    <th class="px-5 py-3 text-right">Aksi</th>
                 </tr>
             </thead>
             <tbody>
                 @forelse($zakatTypes as $type)
                     <tr class="border-t border-gray-100">
-                        <td class="px-5 py-3 font-medium">{{ $type->name }}</td>
-                        <td class="px-5 py-3">
-                            {{ $type->calculation_unit === 'nishab_percentage' ? 'Persentase dgn Nishab' : 'Tetap per Jiwa' }}
-                        </td>
-                        <td class="px-5 py-3">
-                            {{ $type->nishab_amount ? 'Rp ' . number_format($type->nishab_amount, 0, ',', '.') : '-' }}
-                        </td>
-                        <td class="px-5 py-3">{{ $type->rate_percentage ? $type->rate_percentage . '%' : '-' }}</td>
-                        <td class="px-5 py-3">{{ $type->zakats_count }}</td>
-                        <td class="space-x-2 px-5 py-3 text-right">
+                        <td class="space-x-2 px-5 py-3">
                             <a href="{{ route('admin.zakat-types.edit', $type) }}"
                                 class="text-emerald-700 hover:underline">Ubah</a>
 
@@ -57,6 +48,15 @@
                                 message="Jenis zakat &quot;{{ $type->name }}&quot; akan dihapus. Lanjutkan?"
                                 formId="delete-zakattype-{{ $type->id }}" />
                         </td>
+                        <td class="px-5 py-3 font-medium">{{ $type->name }}</td>
+                        <td class="px-5 py-3">
+                            {{ $type->calculation_unit === 'nishab_percentage' ? 'Persentase dgn Nishab' : 'Tetap per Jiwa' }}
+                        </td>
+                        <td class="px-5 py-3">
+                            {{ $type->nishab_amount ? 'Rp ' . number_format($type->nishab_amount, 0, ',', '.') : '-' }}
+                        </td>
+                        <td class="px-5 py-3">{{ $type->rate_percentage ? $type->rate_percentage . '%' : '-' }}</td>
+                        <td class="px-5 py-3">{{ $type->zakats_count }}</td>
                     </tr>
                 @empty
                     <tr>

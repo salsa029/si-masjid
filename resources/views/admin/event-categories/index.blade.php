@@ -37,25 +37,17 @@
             <thead
                 class="border-b border-gray-100 bg-gray-50/80 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
                 <tr>
+                    <th class="px-5 py-4">Aksi</th>
                     <th class="px-5 py-4">Nama Kategori</th>
                     <th class="px-5 py-4">Slug</th>
                     <th class="px-5 py-4">Jumlah Event</th>
-                    <th class="px-5 py-4 text-right">Aksi</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-100">
                 @forelse ($eventCategories as $category)
                     <tr class="transition-colors hover:bg-emerald-50/40">
-                        <td class="px-5 py-4 font-medium text-gray-800">{{ $category->name }}</td>
-                        <td class="px-5 py-4 text-gray-500">{{ $category->slug }}</td>
                         <td class="px-5 py-4">
-                            <span
-                                class="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700 ring-1 ring-inset ring-emerald-200">
-                                {{ $category->events_count }}
-                            </span>
-                        </td>
-                        <td class="px-5 py-4 text-right">
-                            <div class="flex items-center justify-end gap-1.5">
+                            <div class="flex items-center gap-1.5">
                                 <a href="{{ route('admin.event-categories.edit', $category) }}"
                                     class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-emerald-700 transition hover:bg-emerald-100 hover:text-emerald-800"
                                     title="Ubah">
@@ -72,6 +64,14 @@
                                     </button>
                                 </form>
                             </div>
+                        </td>
+                        <td class="px-5 py-4 font-medium text-gray-800">{{ $category->name }}</td>
+                        <td class="px-5 py-4 text-gray-500">{{ $category->slug }}</td>
+                        <td class="px-5 py-4">
+                            <span
+                                class="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700 ring-1 ring-inset ring-emerald-200">
+                                {{ $category->events_count }}
+                            </span>
                         </td>
                     </tr>
                 @empty

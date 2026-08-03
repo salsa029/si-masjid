@@ -54,36 +54,20 @@
         <table class="w-full text-sm">
             <thead class="bg-gray-50 text-left text-gray-500">
                 <tr>
+                    <th class="px-5 py-3">Aksi</th>
                     <th class="px-5 py-3">No. Transaksi</th>
                     <th class="px-5 py-3">Donatur</th>
                     <th class="px-5 py-3">Kategori/Campaign</th>
                     <th class="px-5 py-3"><x-sortable-header field="amount" label="Nominal" /></th>
                     <th class="px-5 py-3"><x-sortable-header field="payment_status" label="Status" /></th>
                     <th class="px-5 py-3"><x-sortable-header field="created_at" label="Tanggal" /></th>
-                    <th class="px-5 py-3 text-center">Aksi</th>
                 </tr>
             </thead>
             <tbody>
                 @forelse($infaqs as $infaq)
                     <tr class="border-t border-gray-100">
-                        <td class="px-5 py-3">{{ $infaq->transaction_number }}</td>
-                        <td class="px-5 py-3">{{ $infaq->display_name }}</td>
-                        <td class="px-5 py-3">{{ $infaq->category->name ?? ($infaq->campaign->title ?? 'Umum') }}</td>
-                        <td class="px-5 py-3">Rp {{ number_format($infaq->amount, 0, ',', '.') }}</td>
                         <td class="px-5 py-3">
-                            @php
-                                $color = match ($infaq->payment_status) {
-                                    'success' => 'bg-emerald-100 text-emerald-700',
-                                    'pending', 'awaiting_verification' => 'bg-amber-100 text-amber-700',
-                                    default => 'bg-red-100 text-red-700',
-                                };
-                            @endphp
-                            <span
-                                class="{{ $color }} rounded-full px-2 py-1 text-xs font-medium">{{ ucfirst(str_replace('_', ' ', $infaq->payment_status)) }}</span>
-                        </td>
-                        <td class="px-5 py-3 text-gray-500">{{ $infaq->created_at->format('d/m/Y H:i') }}</td>
-                        <td class="px-5 py-3">
-                            <div class="flex items-center justify-center gap-2">
+                            <div class="flex items-center gap-2">
                                 {{-- Tombol Aksi untuk Transaksi Manual Transfer yang Menunggu Verifikasi --}}
                                 @if ($infaq->payment_status === 'awaiting_verification' && $infaq->payment_method === 'manual_transfer')
                                     <form id="approve-infaq-{{ $infaq->id }}"
@@ -128,6 +112,22 @@
                                 @endif
                             </div>
                         </td>
+                        <td class="px-5 py-3">{{ $infaq->transaction_number }}</td>
+                        <td class="px-5 py-3">{{ $infaq->display_name }}</td>
+                        <td class="px-5 py-3">{{ $infaq->category->name ?? ($infaq->campaign->title ?? 'Umum') }}</td>
+                        <td class="px-5 py-3">Rp {{ number_format($infaq->amount, 0, ',', '.') }}</td>
+                        <td class="px-5 py-3">
+                            @php
+                                $color = match ($infaq->payment_status) {
+                                    'success' => 'bg-emerald-100 text-emerald-700',
+                                    'pending', 'awaiting_verification' => 'bg-amber-100 text-amber-700',
+                                    default => 'bg-red-100 text-red-700',
+                                };
+                            @endphp
+                            <span
+                                class="{{ $color }} rounded-full px-2 py-1 text-xs font-medium">{{ ucfirst(str_replace('_', ' ', $infaq->payment_status)) }}</span>
+                        </td>
+                        <td class="px-5 py-3 text-gray-500">{{ $infaq->created_at->format('d/m/Y H:i') }}</td>
                     </tr>
                 @empty
                     <tr>

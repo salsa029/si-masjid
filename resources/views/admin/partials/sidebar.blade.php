@@ -135,7 +135,10 @@
             class="sidebar-sub-item {{ request()->routeIs('admin.donation-verifications.infaq.*') ? 'active' : 'text-emerald-200' }} flex items-center gap-3 rounded-lg py-2.5 pl-8 pr-3">
             <i class="fas fa-check-circle w-4 text-center text-xs" aria-hidden="true"></i>
             <span class="flex-1">Verifikasi Infaq</span>
-            <span class="rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-semibold text-white">12</span>
+            @if ($pendingInfaqVerifications > 0)
+                <span
+                    class="rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-semibold text-white">{{ $pendingInfaqVerifications }}</span>
+            @endif
         </a>
         <a href="{{ route('admin.zakats.index') }}"
             class="sidebar-sub-item {{ request()->routeIs('admin.zakats.*') && !request()->routeIs('admin.zakat-types.*') && !request()->routeIs('admin.donation-verifications.zakat.*') ? 'active' : 'text-emerald-200' }} flex items-center gap-3 rounded-lg py-2.5 pl-8 pr-3">
@@ -150,7 +153,11 @@
         <a href="{{ route('admin.donation-verifications.zakat.index') }}"
             class="sidebar-sub-item {{ request()->routeIs('admin.donation-verifications.zakat.*') ? 'active' : 'text-emerald-200' }} flex items-center gap-3 rounded-lg py-2.5 pl-8 pr-3">
             <i class="fas fa-check-circle w-4 text-center text-xs" aria-hidden="true"></i>
-            <span>Verifikasi Zakat</span>
+            <span class="flex-1">Verifikasi Zakat</span>
+            @if ($pendingZakatVerifications > 0)
+                <span
+                    class="rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-semibold text-white">{{ $pendingZakatVerifications }}</span>
+            @endif
         </a>
     </div>
 
@@ -167,13 +174,24 @@
             class="block rounded-lg px-2 py-1.5 text-sm text-emerald-100 hover:bg-white/10">Campaign Infaq</a>
         <a href="{{ route('admin.donation-verifications.infaq.index') }}"
             class="flex items-center justify-between rounded-lg px-2 py-1.5 text-sm text-emerald-100 hover:bg-white/10">Verifikasi
-            Infaq <span class="rounded-full bg-red-500 px-1.5 text-[10px] font-semibold text-white">12</span></a>
+            Infaq
+            @if ($pendingInfaqVerifications > 0)
+                <span
+                    class="rounded-full bg-red-500 px-1.5 text-[10px] font-semibold text-white">{{ $pendingInfaqVerifications }}</span>
+            @endif
+        </a>
         <a href="{{ route('admin.zakats.index') }}"
             class="block rounded-lg px-2 py-1.5 text-sm text-emerald-100 hover:bg-white/10">Daftar Zakat</a>
         <a href="{{ route('admin.zakat-types.index') }}"
             class="block rounded-lg px-2 py-1.5 text-sm text-emerald-100 hover:bg-white/10">Jenis Zakat</a>
         <a href="{{ route('admin.donation-verifications.zakat.index') }}"
-            class="block rounded-lg px-2 py-1.5 text-sm text-emerald-100 hover:bg-white/10">Verifikasi Zakat</a>
+            class="flex items-center justify-between rounded-lg px-2 py-1.5 text-sm text-emerald-100 hover:bg-white/10">Verifikasi
+            Zakat
+            @if ($pendingZakatVerifications > 0)
+                <span
+                    class="rounded-full bg-red-500 px-1.5 text-[10px] font-semibold text-white">{{ $pendingZakatVerifications }}</span>
+            @endif
+        </a>
     </div>
 </div>
 
@@ -190,11 +208,15 @@
 
     <div class="space-y-0.5 overflow-hidden pl-2 transition-all duration-300" x-show="open && !collapsed" x-collapse
         x-cloak>
+        <a href="{{ route('admin.qurban-activities.index') }}"
+            class="sidebar-sub-item {{ request()->routeIs('admin.qurban-activities.*') ? 'active' : 'text-emerald-200' }} flex items-center gap-3 rounded-lg py-2.5 pl-8 pr-3">
+            <i class="fas fa-calendar-check w-4 text-center text-xs" aria-hidden="true"></i>
+            <span>Qurban Activity</span>
+        </a>
         <a href="{{ route('admin.sacrificial-animals.index') }}"
             class="sidebar-sub-item {{ request()->routeIs('admin.sacrificial-animals.*') && !request()->routeIs('admin.qurban-*') ? 'active' : 'text-emerald-200' }} flex items-center gap-3 rounded-lg py-2.5 pl-8 pr-3">
             <i class="fas fa-cow w-4 text-center text-xs" aria-hidden="true"></i>
-            <span class="flex-1">Hewan Kurban</span>
-            <span class="rounded-full bg-amber-400 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-950">NEW</span>
+            <span>Hewan Kurban</span>
         </a>
         <a href="{{ route('admin.qurban-dashboard.index') }}"
             class="sidebar-sub-item {{ request()->routeIs('admin.qurban-dashboard.*') ? 'active' : 'text-emerald-200' }} flex items-center gap-3 rounded-lg py-2.5 pl-8 pr-3">
@@ -204,21 +226,31 @@
         <a href="{{ route('admin.qurban-verifications.index') }}"
             class="sidebar-sub-item {{ request()->routeIs('admin.qurban-verifications.*') ? 'active' : 'text-emerald-200' }} flex items-center gap-3 rounded-lg py-2.5 pl-8 pr-3">
             <i class="fas fa-check-circle w-4 text-center text-xs" aria-hidden="true"></i>
-            <span>Verifikasi Pembayaran</span>
+            <span class="flex-1">Verifikasi Pembayaran</span>
+            @if ($pendingQurbanVerifications > 0)
+                <span
+                    class="rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-semibold text-white">{{ $pendingQurbanVerifications }}</span>
+            @endif
         </a>
     </div>
 
     <div
         class="sb-tooltip pointer-events-none absolute left-full top-0 z-50 ml-3 hidden w-56 space-y-0.5 rounded-xl bg-emerald-950 p-2 shadow-xl lg:block">
         <p class="px-2 pb-1 text-[11px] font-semibold uppercase tracking-wide text-emerald-400">Kurban</p>
+        <a href="{{ route('admin.qurban-activities.index') }}"
+            class="block rounded-lg px-2 py-1.5 text-sm text-emerald-100 hover:bg-white/10">Qurban Activity</a>
         <a href="{{ route('admin.sacrificial-animals.index') }}"
-            class="flex items-center justify-between rounded-lg px-2 py-1.5 text-sm text-emerald-100 hover:bg-white/10">Hewan
-            Kurban <span
-                class="rounded-full bg-amber-400 px-1.5 text-[10px] font-semibold text-emerald-950">NEW</span></a>
+            class="block rounded-lg px-2 py-1.5 text-sm text-emerald-100 hover:bg-white/10">Hewan Kurban</a>
         <a href="{{ route('admin.qurban-dashboard.index') }}"
             class="block rounded-lg px-2 py-1.5 text-sm text-emerald-100 hover:bg-white/10">Dashboard Status Kurban</a>
         <a href="{{ route('admin.qurban-verifications.index') }}"
-            class="block rounded-lg px-2 py-1.5 text-sm text-emerald-100 hover:bg-white/10">Verifikasi Pembayaran</a>
+            class="flex items-center justify-between rounded-lg px-2 py-1.5 text-sm text-emerald-100 hover:bg-white/10">Verifikasi
+            Pembayaran
+            @if ($pendingQurbanVerifications > 0)
+                <span
+                    class="rounded-full bg-red-500 px-1.5 text-[10px] font-semibold text-white">{{ $pendingQurbanVerifications }}</span>
+            @endif
+        </a>
     </div>
 </div>
 

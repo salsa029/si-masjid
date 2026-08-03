@@ -46,8 +46,8 @@
             <thead
                 class="border-b border-gray-100 bg-gray-50/80 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
                 <tr>
-                    <th class="px-5 py-4">#</th>
                     <th class="px-5 py-4">Aksi</th>
+                    <th class="px-5 py-4">#</th>
                     <th class="px-5 py-4">Nama Kategori</th>
                     <th class="px-5 py-4">Slug</th>
                     <th class="px-5 py-4 text-center">Jumlah Artikel</th>
@@ -56,9 +56,6 @@
             <tbody class="divide-y divide-gray-100">
                 @forelse ($articleCategories as $category)
                     <tr class="transition-colors hover:bg-emerald-50/40">
-                        <td class="px-5 py-4 text-gray-400">
-                            {{ $loop->iteration + ($articleCategories->currentPage() - 1) * $articleCategories->perPage() }}
-                        </td>
                         <td class="px-5 py-4">
                             <div class="flex items-center gap-1.5">
                                 <a href="{{ route('admin.article-categories.edit', $category) }}"
@@ -77,6 +74,9 @@
                                     </button>
                                 </form>
                             </div>
+                        </td>
+                        <td class="px-5 py-4 text-gray-400">
+                            {{ $loop->iteration + ($articleCategories->currentPage() - 1) * $articleCategories->perPage() }}
                         </td>
                         <td class="px-5 py-4 font-medium text-gray-800">{{ $category->name }}</td>
                         <td class="px-5 py-4 text-gray-500">{{ $category->slug }}</td>

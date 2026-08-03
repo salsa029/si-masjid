@@ -7,24 +7,24 @@
         <table class="w-full text-sm">
             <thead class="bg-gray-50 text-left text-gray-500">
                 <tr>
+                    <th class="px-5 py-3">Aksi</th>
                     <th class="px-5 py-3">Jamaah</th>
                     <th class="px-5 py-3">Jenis Zakat</th>
                     <th class="px-5 py-3">Nominal</th>
                     <th class="px-5 py-3">Diunggah Pada</th>
-                    <th class="px-5 py-3 text-right">Aksi</th>
                 </tr>
             </thead>
             <tbody>
                 @forelse($items as $zakat)
                     <tr class="border-t border-gray-100">
+                        <td class="px-5 py-3">
+                            <a href="{{ route('admin.donation-verifications.zakat.show', $zakat) }}"
+                                class="text-emerald-700 hover:underline">Tinjau Bukti</a>
+                        </td>
                         <td class="px-5 py-3">{{ $zakat->display_name }}</td>
                         <td class="px-5 py-3">{{ $zakat->zakatType->name }}</td>
                         <td class="px-5 py-3">Rp {{ number_format($zakat->amount, 0, ',', '.') }}</td>
                         <td class="px-5 py-3 text-gray-500">{{ $zakat->updated_at->format('d/m/Y H:i') }}</td>
-                        <td class="px-5 py-3 text-right">
-                            <a href="{{ route('admin.donation-verifications.zakat.show', $zakat) }}"
-                                class="text-emerald-700 hover:underline">Tinjau Bukti</a>
-                        </td>
                     </tr>
                 @empty
                     <tr>
