@@ -1,0 +1,169 @@
+<?php
+
+namespace App\Http\Controllers\Public;
+
+use App\Http\Controllers\Controller;
+use App\Models\DonationSetting;
+use App\Models\Infaq;
+use App\Models\InfaqCampaign;
+use App\Models\InfaqCategory;
+use App\Models\MosqueProfile;
+use App\Services\DonationService;
+use App\Services\ImageUploadService;
+use App\Services\MidtransService;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
+use Illuminate\View\View;
+
+class InfaqController extends Controller
+{
+    public function __construct(
+        protected MidtransService $midtransService,
+        protected ImageUploadService $imageUploadService,
+        protected DonationService $donationService,
+    ) {}
+
+    /**
+     * Halaman utama Infaq
+     */
+    public function index(): View
+    {
+        $categories = InfaqCategory::orderBy('name')->get();
+        $activeCampaigns = InfaqCampaign::where('status', 'active')->latest()->take(6)->get();
+        $settings = DonationSetting::first();
+
+        return view('public.infaq.index', compact('categories', 'activeCampaigns', 'settings'));
+    }
+
+    /**
+     * Halaman detail Campaign Infaq
+     */
+    public function campaign(InfaqCampaign $infaqCampaign): View
+    {
+        return view('public.infaq.campaign', compact('infaqCampaign'));
+    }
+
+    /**
+     * Proses penyimpanan transaksi Infaq
+     */
+    public function store(Request $request): RedirectResponse
+    {
+        $settings = DonationSetting::first();
+        $minAmount = $settings->min_infaq_amount ?? 10000;
+
+        $validated = $request->validate([
+            'category_id' => ['nullable', 'exists:infaq_categories,id'],
+            'campaign_id' => ['nullable', 'exists:infaq_campaigns,id'],
+            'amount' => ['required', 'numeric', "min:{$minAmount}"],
+            'is_anonymous' => ['nullable', 'boolean'],
+            'donor_name' => ['nullable', 'string', 'max:255'],
+            'message' => ['nullable', 'string', 'max:500'],
+            'payment_method' => ['required', 'in:midtrans,manual_transfer'],
+        ], [
+            'amount.required' => 'Nominal infaq wajib diisi.',
+            'amount.min' => "Minimal infaq adalah Rp " . number_format($minAmount, 0, ',', '.') . '.',
+        ]);
+
+        $infaq = Infaq::create([
+            'user_id' => Auth::id(),
+            'category_id' => $validated['category_id'] ?? null,
+            'campaign_id' => $validated['campaign_id'] ?? null,
+            'amount' => $validated['amount'],
+            'is_anonymous' => $request->boolean('is_anonymous'),
+            'donor_name' => $validated['donor_name'] ?? Auth::user()->name,
+            'message' => $validated['message'] ?? null,
+            'midtrans_order_id' => 'INF-' . Str::uuid(),
+            'payment_method' => $validated['payment_method'],
+            'payment_status' => 'pending',
+            'reserved_until' => now()->addHours(24),
+        ]);
+
+        return redirect()->route('public.infaq.pay', $infaq);
+    }
+
+    /**
+     * Halaman pembayaran Infaq
+     */
+    public function pay(Infaq $infaq): View
+    {
+        abort_unless($infaq->user_id === Auth::id(), 403);
+
+        $snapToken = null;
+
+        if ($infaq->payment_status === 'pending' && $infaq->payment_method === 'midtrans') {
+            $snapToken = $this->midtransService->createSnapToken(
+                orderId: $infaq->midtrans_order_id,
+                amount: (int) round($infaq->amount),
+                customerDetails: ['first_name' => Auth::user()->name, 'email' => Auth::user()->email],
+                itemName: 'Infaq',
+            );
+        }
+
+        $settings = DonationSetting::first();
+
+        return view('public.infaq.pay', compact('infaq', 'snapToken', 'settings'));
+    }
+
+    /**
+     * Upload bukti pembayaran manual Infaq
+     */
+    public function uploadProof(Request $request, Infaq $infaq): RedirectResponse
+    {
+        abort_unless($infaq->user_id === Auth::id(), 403);
+        abort_unless($infaq->payment_method === 'manual_transfer', 404);
+        abort_unless($infaq->payment_status === 'pending', 400);
+
+        $request->validate([
+            'payment_proof' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+        ], [
+            'payment_proof.required' => 'Bukti pembayaran wajib diunggah.',
+        ]);
+
+        $path = $this->imageUploadService->upload(
+            $request->file('payment_proof'),
+            folder: 'infaq-payment-proofs',
+            maxWidth: 1024
+        );
+
+        $infaq->update([
+            'payment_proof' => $path,
+            'payment_status' => 'awaiting_verification'
+        ]);
+
+        return redirect()->route('public.infaq.pay', $infaq)
+            ->with('success', 'Bukti pembayaran berhasil diunggah, menunggu verifikasi Admin.');
+    }
+
+    /**
+     * Unduh E-Kuitansi Infaq (PDF)
+     */
+    public function receipt(Infaq $infaq)
+    {
+        abort_unless($infaq->user_id === Auth::id(), 403);
+        abort_unless($infaq->payment_status === 'success', 404);
+
+        $mosqueProfile = MosqueProfile::first();
+
+        $pdf = Pdf::loadView('pdf.infaq-receipt', compact('infaq', 'mosqueProfile'));
+
+        return $pdf->download('e-kuitansi-' . $infaq->transaction_number . '.pdf');
+    }
+
+    /**
+     * Halaman riwayat Infaq pengguna
+     */
+    public function history(Request $request): View
+    {
+        $infaqs = Infaq::with(['category', 'campaign'])
+            ->where('user_id', Auth::id())
+            ->when($request->filled('status'), fn($q) => $q->where('payment_status', $request->input('status')))
+            ->latest()
+            ->paginate(10)
+            ->withQueryString();
+
+        return view('public.infaq.history', compact('infaqs'));
+    }
+}

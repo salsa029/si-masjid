@@ -1,0 +1,131 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Infaq;
+use App\Models\Zakat;
+use App\Models\QurbanOrder;
+use App\Models\SacrificialAnimal;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
+use Midtrans\Notification;
+use App\Services\QurbanService;
+
+class WebhookController extends Controller
+{
+    public function __construct(protected QurbanService $qurbanService) {}
+
+    public function handle(): JsonResponse
+    {
+        $notification = new Notification();
+
+        $orderId = $notification->order_id;
+        $transactionStatus = $notification->transaction_status;
+        $fraudStatus = $notification->fraud_status ?? null;
+
+        Log::info('Midtrans Webhook diterima', [
+            'order_id' => $orderId,
+            'transaction_status' => $transactionStatus,
+            'fraud_status' => $fraudStatus,
+        ]);
+
+        $paymentStatus = $this->mapTransactionStatus($transactionStatus, $fraudStatus);
+
+        // Routing penanganan transaksi berdasarkan prefiks Order ID
+        if (Str::startsWith($orderId, 'INF-')) {
+            $this->handleInfaq($orderId, $paymentStatus);
+        } elseif (Str::startsWith($orderId, 'ZKT-')) {
+            $this->handleZakat($orderId, $paymentStatus);
+        } elseif (Str::startsWith($orderId, 'QRB-')) {
+            $this->handleQurbanOrder($orderId, $paymentStatus);
+        }
+
+        return response()->json(['message' => 'Notifikasi berhasil diproses.']);
+    }
+
+    /**
+     * Memetakan status transaksi dari Midtrans ke status sistem internal.
+     */
+    private function mapTransactionStatus(string $transactionStatus, ?string $fraudStatus): string
+    {
+        return match ($transactionStatus) {
+            'capture' => $fraudStatus === 'accept' ? 'success' : 'pending',
+            'settlement' => 'success',
+            'pending' => 'pending',
+            'deny', 'cancel' => 'failed',
+            'expire' => 'expired',
+            default => 'pending',
+        };
+    }
+
+    /**
+     * Menangani pembaruan status untuk transaksi Infaq.
+     */
+    private function handleInfaq(string $orderId, string $paymentStatus): void
+    {
+        $infaq = Infaq::where('midtrans_order_id', $orderId)->first();
+
+        if (!$infaq) {
+            Log::warning("Webhook: Infaq dengan order_id {$orderId} tidak ditemukan.");
+            return;
+        }
+
+        $infaq->update(['payment_status' => $paymentStatus]);
+    }
+
+    /**
+     * Menangani pembaruan status untuk transaksi Zakat.
+     */
+    private function handleZakat(string $orderId, string $paymentStatus): void
+    {
+        $zakat = Zakat::where('midtrans_order_id', $orderId)->first();
+
+        if (!$zakat) {
+            Log::warning("Webhook: Zakat dengan order_id {$orderId} tidak ditemukan.");
+            return;
+        }
+
+        $zakat->update(['payment_status' => $paymentStatus]);
+    }
+
+    /**
+     * Menangani pembaruan status untuk transaksi Qurban.
+     */
+    private function handleQurbanOrder(string $orderId, string $paymentStatus): void
+    {
+        $qurbanOrder = QurbanOrder::where('midtrans_order_id', $orderId)->first();
+
+        if (!$qurbanOrder) {
+            Log::warning("Webhook: QurbanOrder dengan order_id {$orderId} tidak ditemukan.");
+            return;
+        }
+
+        if ($paymentStatus === 'success') {
+            $this->qurbanService->markOrderAsSuccess($qurbanOrder, 'midtrans');
+            return;
+        }
+
+        $qurbanOrder->update(['payment_status' => $paymentStatus]);
+    }
+
+    /**
+     * Memeriksa kuota hewan kurban (digunakan di dalam QurbanService).
+     */
+    private function updateAnimalStatusIfFullyBooked(int $sacrificialAnimalId): void
+    {
+        $animal = SacrificialAnimal::find($sacrificialAnimalId);
+
+        if (!$animal) {
+            return;
+        }
+
+        $successfulSlots = QurbanOrder::where('sacrificial_animal_id', $animal->id)
+            ->where('payment_status', 'success')
+            ->count();
+
+        if ($successfulSlots >= $animal->max_participants) {
+            $animal->update(['status' => 'fully_booked']);
+        }
+    }
+}
