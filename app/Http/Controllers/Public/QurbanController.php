@@ -4,15 +4,19 @@ namespace App\Http\Controllers\Public;
 
 use App\Http\Controllers\Controller;
 use App\Models\SacrificialAnimal;
+use App\Models\MosqueProfile;
 use App\Models\QurbanOrder;
 use App\Services\MidtransService;
 use App\Services\ImageUploadService;
 use App\Services\QurbanService;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Endroid\QrCode\QrCode;
+use Endroid\QrCode\Writer\PngWriter;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class QurbanController extends Controller
 {
@@ -154,8 +158,8 @@ class QurbanController extends Controller
         // Validasi 2: Pastikan pembayaran sudah sukses
         abort_unless($qurbanOrder->payment_status === 'success', 404);
 
-        // Load relasi animal dan user
-        $qurbanOrder->load('animal', 'user');
+        // Load relasi animal beserta Qurban Activity-nya, dan user
+        $qurbanOrder->load('animal.activity', 'user');
 
         // Validasi 3: Pastikan hewan sudah disembelih (dengan pesan custom)
         abort_unless(
@@ -173,11 +177,73 @@ class QurbanController extends Controller
             $qurbanOrder->refresh();
         }
 
+        // Generate QR code verifikasi (mengarah ke halaman verifikasi publik)
+        $verificationUrl = route('public.qurban.certificate-verify', $qurbanOrder->certificate_number);
+        $qrCode = new QrCode(data: $verificationUrl, size: 180, margin: 4);
+        $qrCodeDataUri = (new PngWriter())->write($qrCode)->getDataUri();
+
+        // Embed TTD Ketua DKM & foto Ketua Kurban dari Qurban Activity sebagai base64 (agar tampil stabil di PDF)
+        $activity = $qurbanOrder->animal->activity;
+        $dkmSignatureDataUri = $this->imageToDataUri($activity?->dkm_chairman_signature);
+        $qurbanChairmanPhotoDataUri = $this->imageToDataUri($activity?->qurban_chairman_photo);
+        $mosqueProfile = MosqueProfile::first();
+
+        // Hitung tahun Hijriah otomatis dari tanggal Qurban Activity (atau tanggal hari ini jika tidak ada activity)
+        $hijriFormatter = new \IntlDateFormatter(
+            'id_ID@calendar=islamic',
+            \IntlDateFormatter::NONE,
+            \IntlDateFormatter::NONE,
+            null,
+            \IntlDateFormatter::TRADITIONAL,
+            'yyyy'
+        );
+        $hijriYear = $hijriFormatter->format(($activity?->date ?? now())->getTimestamp());
+
+        // Latar belakang sertifikat (desain dari Canva), di-embed sebagai base64
+        $backgroundDataUri = 'data:image/png;base64,' . base64_encode(
+            file_get_contents(resource_path('certificate-assets/qurban-certificate-bg.png'))
+        );
+
         // Generate PDF sertifikat
-        $pdf = Pdf::loadView('pdf.qurban-certificate', compact('qurbanOrder'));
+        $pdf = Pdf::loadView('pdf.qurban-certificate', compact(
+            'qurbanOrder',
+            'qrCodeDataUri',
+            'dkmSignatureDataUri',
+            'qurbanChairmanPhotoDataUri',
+            'mosqueProfile',
+            'hijriYear',
+            'backgroundDataUri'
+        ))->setPaper('a4', 'landscape');
 
         // Tampilkan PDF di browser (stream)
         return $pdf->stream('sertifikat-kurban-' . $qurbanOrder->certificate_number . '.pdf');
+    }
+
+    /**
+     * Mengubah file gambar di storage public menjadi data URI base64,
+     * agar tampil stabil saat dirender oleh dompdf.
+     */
+    protected function imageToDataUri(?string $path): ?string
+    {
+        if (! $path || ! Storage::disk('public')->exists($path)) {
+            return null;
+        }
+
+        return 'data:image/webp;base64,' . base64_encode(Storage::disk('public')->get($path));
+    }
+
+    /**
+     * Halaman verifikasi publik sertifikat kurban (diakses via QR code, tanpa perlu login).
+     * Hanya menampilkan info non-sensitif untuk memastikan keaslian sertifikat.
+     */
+    public function verifyCertificate(string $certificateNumber): View
+    {
+        $qurbanOrder = QurbanOrder::with(['animal.activity', 'user'])
+            ->where('certificate_number', $certificateNumber)
+            ->where('payment_status', 'success')
+            ->first();
+
+        return view('public.qurban.certificate-verify', compact('qurbanOrder', 'certificateNumber'));
     }
 
     /**
@@ -198,7 +264,7 @@ class QurbanController extends Controller
         $qurbanOrder->load('animal');
 
         // Generate PDF kuitansi
-        $pdf = Pdf::loadView('pdf.qurban-receipt', compact('qurbanOrder'));
+        $pdf = Pdf::loadView('pdf.qurban.receipt', compact('qurbanOrder'));
 
         // Download PDF (bukan stream/tampil di browser)
         return $pdf->download('e-kuitansi-' . $qurbanOrder->midtrans_order_id . '.pdf');

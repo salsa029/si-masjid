@@ -14,6 +14,7 @@ class SacrificialAnimalRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'qurban_activity_id' => ['required', 'exists:qurban_activities,id'],
             'animal_type' => ['required', 'in:sapi,kambing,domba'],
             'name' => ['required', 'string', 'max:255'],
             'weight' => ['required', 'numeric', 'min:1'],
@@ -32,6 +33,8 @@ class SacrificialAnimalRequest extends FormRequest
     public function messages(): array
     {
         return [
+            'qurban_activity_id.required' => 'Qurban Activity wajib dipilih terlebih dahulu.',
+            'qurban_activity_id.exists' => 'Qurban Activity yang dipilih tidak valid.',
             'animal_type.required' => 'Jenis hewan wajib dipilih.',
             'animal_type.in' => 'Jenis hewan harus sapi, kambing, atau domba.',
             'name.required' => 'Nama/kode hewan wajib diisi.',

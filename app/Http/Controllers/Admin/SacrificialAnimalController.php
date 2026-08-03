@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\SacrificialAnimalRequest;
+use App\Models\QurbanActivity;
 use App\Models\SacrificialAnimal;
 use App\Services\ImageUploadService;
 use Illuminate\Http\RedirectResponse;
@@ -29,7 +30,9 @@ class SacrificialAnimalController extends Controller
 
     public function create(): View
     {
-        return view('admin.sacrificial-animals.create');
+        $qurbanActivities = QurbanActivity::latest('date')->get();
+
+        return view('admin.sacrificial-animals.create', compact('qurbanActivities'));
     }
 
     public function store(SacrificialAnimalRequest $request): RedirectResponse
@@ -54,8 +57,9 @@ class SacrificialAnimalController extends Controller
     public function edit(SacrificialAnimal $sacrificialAnimal): View
     {
         $sacrificialAnimal->load('documentations');
+        $qurbanActivities = QurbanActivity::latest('date')->get();
 
-        return view('admin.sacrificial-animals.edit', compact('sacrificialAnimal'));
+        return view('admin.sacrificial-animals.edit', compact('sacrificialAnimal', 'qurbanActivities'));
     }
 
     public function update(SacrificialAnimalRequest $request, SacrificialAnimal $sacrificialAnimal): RedirectResponse

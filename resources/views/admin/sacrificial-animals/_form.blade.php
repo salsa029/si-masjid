@@ -1,6 +1,27 @@
 @csrf
 
 <div class="space-y-5">
+    {{-- Row 0: Qurban Activity (wajib dipilih dahulu) --}}
+    <div>
+        <label class="mb-1 block text-sm font-medium">Qurban Activity</label>
+        @php $currentActivityId = old('qurban_activity_id', $sacrificialAnimal->qurban_activity_id ?? ''); @endphp
+        <select name="qurban_activity_id" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
+            <option value="">— Pilih Qurban Activity —</option>
+            @foreach ($qurbanActivities as $activity)
+                <option value="{{ $activity->id }}" @selected((string) $currentActivityId === (string) $activity->id)>
+                    {{ $activity->name }} ({{ $activity->date?->format('d/m/Y') }})
+                </option>
+            @endforeach
+        </select>
+        <p class="mt-1 text-xs text-gray-400">Hewan kurban harus terhubung ke sebuah Qurban Activity.
+            <a href="{{ route('admin.qurban-activities.create') }}" class="text-emerald-700 hover:underline">Belum ada?
+                Tambah Qurban Activity baru.</a>
+        </p>
+        @error('qurban_activity_id')
+            <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+        @enderror
+    </div>
+
     {{-- Row 1: Jenis Hewan & Nama/Kode Hewan --}}
     <div class="grid grid-cols-2 gap-4">
         <div>

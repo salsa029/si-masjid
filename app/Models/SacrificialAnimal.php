@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Traits\LogsAdminActivity;
 
@@ -14,6 +15,7 @@ class SacrificialAnimal extends Model
     use HasFactory;
 
     protected $fillable = [
+        'qurban_activity_id',
         'animal_type',
         'name',
         'package_name',
@@ -25,6 +27,14 @@ class SacrificialAnimal extends Model
         'max_participants',
         'status',
     ];
+
+    /**
+     * Relasi ke Qurban Activity (kegiatan/tahun kurban tempat hewan ini didaftarkan)
+     */
+    public function activity(): BelongsTo
+    {
+        return $this->belongsTo(QurbanActivity::class, 'qurban_activity_id');
+    }
 
     /**
      * Relasi ke dokumentasi penyembelihan (SlaughterDocumentation)
