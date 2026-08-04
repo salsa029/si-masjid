@@ -50,20 +50,18 @@
 
                     <!-- Stats -->
                     <div class="mt-12 flex flex-wrap justify-center gap-8 lg:justify-start">
-                        <div>
-                            <p class="text-2xl font-bold text-white">{{ \App\Models\Committee::count() }}+</p>
+                        <a href="{{ route('public.committees.index') }}" class="transition hover:opacity-80">
+                            <p class="text-2xl font-bold text-white">{{ $activeCommitteeCount }}+</p>
                             <p class="text-sm text-green-200">Pengurus Aktif</p>
-                        </div>
-                        <div>
-                            <p class="text-2xl font-bold text-white">
-                                {{ \App\Models\Event::where('status', 'published')->count() }}+</p>
+                        </a>
+                        <a href="{{ route('public.events.index') }}" class="transition hover:opacity-80">
+                            <p class="text-2xl font-bold text-white">{{ $publishedEventCount }}+</p>
                             <p class="text-sm text-green-200">Kegiatan</p>
-                        </div>
-                        <div>
-                            <p class="text-2xl font-bold text-white">
-                                {{ \App\Models\Article::where('status', 'published')->count() }}+</p>
+                        </a>
+                        <a href="{{ route('public.articles.index') }}" class="transition hover:opacity-80">
+                            <p class="text-2xl font-bold text-white">{{ $publishedArticleCount }}+</p>
                             <p class="text-sm text-green-200">Artikel</p>
-                        </div>
+                        </a>
                     </div>
                 </div>
 
@@ -72,8 +70,39 @@
                     <div class="relative">
                         <div class="absolute -right-4 -top-4 h-32 w-32 rounded-full bg-green-400/20 blur-3xl"></div>
                         <div class="absolute -bottom-4 -left-4 h-32 w-32 rounded-full bg-yellow-400/20 blur-3xl"></div>
-                        @if ($mosque && $mosque->hero_image)
-                            <img src="{{ Storage::url($mosque->hero_image) }}" alt="{{ $mosque->name }}"
+
+                        @if (count($heroImages) > 1)
+                            {{-- Slideshow: berganti otomatis antar foto galeri masjid --}}
+                            <div x-data="{
+                                images: @js($heroImages),
+                                current: 0,
+                                timer: null,
+                                init() {
+                                    this.timer = setInterval(() => {
+                                        this.current = (this.current + 1) % this.images.length;
+                                    }, 4000);
+                                }
+                            }"
+                                class="relative h-72 w-full overflow-hidden rounded-2xl shadow-2xl ring-4 ring-white/10 sm:h-96 lg:h-[420px]">
+                                <template x-for="(image, index) in images" :key="index">
+                                    <img :src="image" alt="{{ $mosqueProfile->name ?? 'Masjid An-Nur' }}"
+                                        x-show="current === index" x-transition:enter="transition ease-in-out duration-1000"
+                                        x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                                        x-transition:leave="transition ease-in-out duration-1000"
+                                        x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+                                        class="absolute inset-0 h-full w-full object-cover">
+                                </template>
+
+                                <div class="absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 gap-2">
+                                    <template x-for="(image, index) in images" :key="index">
+                                        <button type="button" @click="current = index"
+                                            :class="current === index ? 'w-6 bg-white' : 'w-2 bg-white/50'"
+                                            class="h-2 rounded-full transition-all duration-300" aria-label="Lihat foto"></button>
+                                    </template>
+                                </div>
+                            </div>
+                        @elseif (count($heroImages) === 1)
+                            <img src="{{ $heroImages[0] }}" alt="{{ $mosqueProfile->name ?? 'Masjid An-Nur' }}"
                                 class="relative h-auto w-full rounded-2xl shadow-2xl ring-4 ring-white/10" loading="lazy">
                         @else
                             <img src="https://images.unsplash.com/photo-1584551246679-258d2be6d3a8?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80&fm=webp"
@@ -131,6 +160,74 @@
         </div>
     </section>
 
+    <!-- ===== IMPACT / HIGHLIGHT LAPORAN KEUANGAN ===== -->
+    <section id="impact" class="relative overflow-hidden bg-gradient-to-br from-green-800 via-green-700 to-green-600 py-14 md:py-20">
+        <div class="absolute inset-0 opacity-10">
+            <i class="fas fa-mosque absolute -right-10 -top-10 text-[220px] text-white" aria-hidden="true"></i>
+        </div>
+        <div class="container relative z-10 mx-auto px-4">
+            <div class="mx-auto mb-10 max-w-2xl text-center">
+                <span
+                    class="mb-3 inline-block rounded-full bg-white/15 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-green-100 backdrop-blur-sm">
+                    <i class="fas fa-chart-line mr-1" aria-hidden="true"></i> Transparansi Amanah
+                </span>
+                <h2 class="text-2xl font-extrabold text-white md:text-4xl">Jejak Kebaikan Masjid An-Nur</h2>
+                <p class="mt-3 text-sm text-green-100/90 md:text-base">
+                    Setiap rupiah infaq dan setiap hewan kurban yang Anda titipkan, kami salurkan dengan amanah untuk
+                    kemakmuran umat.
+                </p>
+            </div>
+
+            <div class="mx-auto grid max-w-5xl grid-cols-2 gap-4 md:grid-cols-4 md:gap-6">
+                <div class="rounded-2xl bg-white/10 p-5 text-center backdrop-blur-sm ring-1 ring-white/20 md:p-6">
+                    <div class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-white/15">
+                        <i class="fas fa-hand-holding-dollar text-xl text-white" aria-hidden="true"></i>
+                    </div>
+                    <p class="text-xl font-extrabold text-white md:text-2xl">
+                        Rp {{ number_format($impactStats['total_donation'], 0, ',', '.') }}</p>
+                    <p class="mt-1 text-xs text-green-100/80 md:text-sm">Infaq &amp; Zakat Terkumpul</p>
+                </div>
+
+                <div class="rounded-2xl bg-white/10 p-5 text-center backdrop-blur-sm ring-1 ring-white/20 md:p-6">
+                    <div class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-white/15">
+                        <i class="fas fa-users text-xl text-white" aria-hidden="true"></i>
+                    </div>
+                    <p class="text-xl font-extrabold text-white md:text-2xl">{{ $impactStats['total_donors'] }}+</p>
+                    <p class="mt-1 text-xs text-green-100/80 md:text-sm">Donatur Berpartisipasi</p>
+                </div>
+
+                <div class="rounded-2xl bg-white/10 p-5 text-center backdrop-blur-sm ring-1 ring-white/20 md:p-6">
+                    <div class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-white/15">
+                        <i class="fas fa-cow text-xl text-white" aria-hidden="true"></i>
+                    </div>
+                    <p class="text-xl font-extrabold text-white md:text-2xl">
+                        {{ $impactStats['total_sacrificed_animals'] }}</p>
+                    <p class="mt-1 text-xs text-green-100/80 md:text-sm">Ekor Hewan Kurban Disalurkan</p>
+                </div>
+
+                <div class="rounded-2xl bg-white/10 p-5 text-center backdrop-blur-sm ring-1 ring-white/20 md:p-6">
+                    <div class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-white/15">
+                        <i class="fas fa-heart-circle-check text-xl text-white" aria-hidden="true"></i>
+                    </div>
+                    <p class="text-xl font-extrabold text-white md:text-2xl">
+                        {{ $impactStats['total_qurban_participants'] }}</p>
+                    <p class="mt-1 text-xs text-green-100/80 md:text-sm">Jamaah Shohibul Kurban</p>
+                </div>
+            </div>
+
+            <div class="mt-8 flex flex-wrap justify-center gap-3">
+                <a href="{{ route('public.infaq.index') }}"
+                    class="rounded-full bg-white px-6 py-3 text-sm font-semibold text-green-700 shadow-lg transition hover:scale-105 hover:shadow-xl">
+                    <i class="fas fa-hand-holding-heart mr-2" aria-hidden="true"></i> Tunaikan Infaq Sekarang
+                </a>
+                <a href="{{ route('public.qurban.index') }}"
+                    class="rounded-full border-2 border-white/60 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/10">
+                    <i class="fas fa-mosque mr-2" aria-hidden="true"></i> Daftar Kurban
+                </a>
+            </div>
+        </div>
+    </section>
+
     <!-- ===== DONATION ===== -->
     <section id="donation" class="bg-gray-50 py-12 md:py-16">
         <div class="container mx-auto px-4">
@@ -166,15 +263,24 @@
                     <div class="flex items-center justify-center p-8 md:w-2/5">
                         <div class="text-center">
                             <div class="relative inline-block rounded-2xl bg-white p-4 shadow-lg">
-                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=MasjidAnNur&format=png"
-                                    alt="QRIS Donasi" class="mx-auto h-32 w-32 md:h-40 md:w-40" loading="lazy">
+                                @if ($donationSettings->qris_image)
+                                    <img src="{{ Storage::url($donationSettings->qris_image) }}" alt="QRIS Donasi"
+                                        class="mx-auto h-32 w-32 object-contain md:h-40 md:w-40" loading="lazy">
+                                @else
+                                    <div
+                                        class="mx-auto flex h-32 w-32 items-center justify-center rounded-lg bg-gray-100 text-gray-400 md:h-40 md:w-40">
+                                        <i class="fas fa-qrcode text-4xl" aria-hidden="true"></i>
+                                    </div>
+                                @endif
                                 <div
                                     class="absolute -right-2 -top-2 rounded-full bg-green-600 px-2 py-0.5 text-[10px] font-bold text-white">
                                     QRIS</div>
                             </div>
                             <div class="mt-4">
                                 <h3 class="font-semibold text-gray-800">Scan QRIS untuk Donasi</h3>
-                                <p class="mt-1 text-xs text-gray-500">Gunakan aplikasi perbankan Anda</p>
+                                <p class="mt-1 text-xs text-gray-500">
+                                    {{ $donationSettings->qris_image ? 'Gunakan aplikasi perbankan Anda' : 'QRIS belum diatur oleh Admin' }}
+                                </p>
                             </div>
                         </div>
                     </div>

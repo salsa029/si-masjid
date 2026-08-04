@@ -17,6 +17,7 @@ use App\Http\Controllers\Public\ZakatController as PublicZakatController;
 // Kontroler Admin
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\MosqueProfileController;
+use App\Http\Controllers\Admin\MosqueGalleryImageController;
 use App\Http\Controllers\Admin\CommitteeController;
 use App\Http\Controllers\Admin\ArticleCategoryController;
 use App\Http\Controllers\Admin\ArticleController;
@@ -201,6 +202,8 @@ Route::middleware(['auth', 'verified', 'role:admin'])
         // Rute Kelola Profil Masjid
         Route::get('/mosque-profile', [MosqueProfileController::class, 'edit'])->name('mosque-profile.edit');
         Route::put('/mosque-profile', [MosqueProfileController::class, 'update'])->name('mosque-profile.update');
+        Route::post('/mosque-profile/gallery', [MosqueGalleryImageController::class, 'store'])->name('mosque-profile.gallery.store');
+        Route::delete('/mosque-profile/gallery/{galleryImage}', [MosqueGalleryImageController::class, 'destroy'])->name('mosque-profile.gallery.destroy');
 
         // Rute Kelola Pengurus
         Route::resource('committees', CommitteeController::class)->except(['show']);

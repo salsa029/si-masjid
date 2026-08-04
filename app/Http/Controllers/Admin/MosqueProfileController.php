@@ -15,7 +15,7 @@ class MosqueProfileController extends Controller
 
     public function edit(): View
     {
-        $mosqueProfile = MosqueProfile::first();
+        $mosqueProfile = MosqueProfile::with('galleryImages')->first();
         return view('admin.mosque-profile.edit', compact('mosqueProfile'));
     }
 

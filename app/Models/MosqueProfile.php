@@ -21,4 +21,9 @@ class MosqueProfile extends Model
         'latitude',
         'longitude',
     ];
+
+    public function galleryImages()
+    {
+        return $this->hasMany(MosqueGalleryImage::class)->orderBy('sort_order');
+    }
 }

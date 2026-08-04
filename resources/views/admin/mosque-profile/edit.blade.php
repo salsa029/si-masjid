@@ -190,5 +190,77 @@
                 </div>
             </form>
         </div>
+
+        {{-- Galeri Foto Masjid (untuk slideshow di halaman Beranda) --}}
+        <div class="mt-6 rounded-xl border border-gray-100 bg-white shadow-sm">
+            <div class="border-b border-gray-100 px-8 py-5">
+                <div class="flex items-center gap-3">
+                    <div class="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
+                        <i class="fas fa-images"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-gray-700">Galeri Foto Masjid</p>
+                        <p class="text-xs text-gray-400">Foto-foto ini akan tampil bergantian (slideshow) di bagian hero
+                            halaman Beranda.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-8">
+                <form method="POST" action="{{ route('admin.mosque-profile.gallery.store') }}"
+                    enctype="multipart/form-data" class="mb-6 space-y-4">
+                    @csrf
+                    <div>
+                        <label class="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-gray-700">
+                            <i class="fas fa-images text-xs text-emerald-600"></i> Pilih Foto (bisa lebih dari 1)
+                        </label>
+                        <div
+                            class="rounded-xl border border-dashed border-gray-300 bg-gray-50/60 p-4 transition hover:border-emerald-300 hover:bg-emerald-50/40">
+                            <input type="file" name="photos[]" accept="image/*" multiple
+                                class="w-full text-sm text-gray-500 file:mr-3 file:rounded-lg file:border-0 file:bg-emerald-600 file:px-4 file:py-2 file:text-sm file:font-medium file:text-white file:transition hover:file:bg-emerald-700">
+                        </div>
+                        <p class="mt-1 text-xs text-gray-400">Format JPG, PNG, atau WebP. Maksimal 2 MB per foto.</p>
+                        @error('photos')
+                            <p class="mt-1.5 flex items-center gap-1 text-xs text-red-600"><i
+                                    class="fas fa-circle-exclamation"></i>{{ $message }}</p>
+                        @enderror
+                        @error('photos.*')
+                            <p class="mt-1.5 flex items-center gap-1 text-xs text-red-600"><i
+                                    class="fas fa-circle-exclamation"></i>{{ $message }}</p>
+                        @enderror
+                    </div>
+                    <button type="submit"
+                        class="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-emerald-600 to-emerald-700 px-6 py-2.5 text-sm font-medium text-white shadow-md shadow-emerald-900/20 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-emerald-900/30">
+                        <i class="fas fa-upload"></i> Unggah Foto
+                    </button>
+                </form>
+
+                @if (! $mosqueProfile || $mosqueProfile->galleryImages->isEmpty())
+                    <div class="rounded-xl border border-dashed border-gray-200 py-10 text-center text-sm text-gray-400">
+                        <i class="fas fa-image mb-2 block text-2xl text-gray-300"></i>
+                        Belum ada foto galeri. Slideshow di Beranda akan memakai Hero Image di atas.
+                    </div>
+                @else
+                    <div class="grid grid-cols-2 gap-4 sm:grid-cols-4">
+                        @foreach ($mosqueProfile->galleryImages as $galleryImage)
+                            <div class="group relative overflow-hidden rounded-xl border border-gray-200 shadow-sm">
+                                <img src="{{ Storage::url($galleryImage->photo) }}" class="h-28 w-full object-cover">
+
+                                <form action="{{ route('admin.mosque-profile.gallery.destroy', $galleryImage) }}"
+                                    method="POST" onsubmit="return confirm('Hapus foto ini?');"
+                                    class="absolute right-1.5 top-1.5">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit"
+                                        class="flex h-7 w-7 items-center justify-center rounded-lg bg-white/90 text-red-600 shadow-sm transition hover:bg-white">
+                                        <i class="fas fa-trash-can text-xs"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
+            </div>
+        </div>
     </div>
 @endsection
