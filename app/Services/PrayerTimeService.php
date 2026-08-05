@@ -138,7 +138,7 @@ class PrayerTimeService
     /**
      * Mendapatkan jadwal sholat saat ini
      */
-    public function getCurrentPrayer(array $prayerTimes = null): ?array
+    public function getCurrentPrayer(?array $prayerTimes = null): ?array
     {
         $prayerTimes = $prayerTimes ?? $this->getPrayerTimes();
         $now = Carbon::now();
@@ -157,7 +157,7 @@ class PrayerTimeService
     /**
      * Mendapatkan jadwal sholat berikutnya
      */
-    public function getNextPrayer(array $prayerTimes = null): ?array
+    public function getNextPrayer(?array $prayerTimes = null): ?array
     {
         $prayerTimes = $prayerTimes ?? $this->getPrayerTimes();
         $currentPrayer = $this->getCurrentPrayer($prayerTimes);
@@ -173,7 +173,7 @@ class PrayerTimeService
     /**
      * Mendapatkan sisa waktu menuju sholat berikutnya
      */
-    public function getTimeRemaining(array $prayerTimes = null): ?string
+    public function getTimeRemaining(?array $prayerTimes = null): ?string
     {
         $prayerTimes = $prayerTimes ?? $this->getPrayerTimes();
         $nextPrayer = $this->getNextPrayer($prayerTimes);
@@ -236,11 +236,11 @@ class PrayerTimeService
     }
 
     /**
-     * Mendapatkan kode kota dari .env atau default
+     * Mendapatkan kode kota dari config/prayer.php (yang dibaca dari .env) atau default
      */
     private function getCityCode(): string
     {
-        return env('PRAYER_CITY_CODE', self::DEFAULT_CITY_CODE);
+        return config('prayer.city_code', self::DEFAULT_CITY_CODE);
     }
 
     /**
