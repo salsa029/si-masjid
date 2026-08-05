@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Infaq;
+use App\Models\QurbanInstallment;
 use App\Models\Zakat;
 use App\Models\QurbanOrder;
 use Illuminate\Http\JsonResponse;
@@ -90,22 +91,37 @@ class WebhookController extends Controller
     }
 
     /**
-     * Menangani pembaruan status untuk transaksi Qurban.
+     * Menangani pembaruan status untuk transaksi Qurban (pembayaran penuh maupun per-cicilan).
      */
     private function handleQurbanOrder(string $orderId, string $paymentStatus): void
     {
         $qurbanOrder = QurbanOrder::where('midtrans_order_id', $orderId)->first();
 
-        if (!$qurbanOrder) {
-            Log::warning("Webhook: QurbanOrder dengan order_id {$orderId} tidak ditemukan.");
+        if ($qurbanOrder) {
+            if ($paymentStatus === 'success') {
+                $this->qurbanService->markOrderAsSuccess($qurbanOrder, 'midtrans');
+                return;
+            }
+
+            $qurbanOrder->update(['payment_status' => $paymentStatus]);
+            return;
+        }
+
+        $installment = QurbanInstallment::where('midtrans_order_id', $orderId)->first();
+
+        if (!$installment) {
+            Log::warning("Webhook: QurbanOrder/cicilan dengan order_id {$orderId} tidak ditemukan.");
             return;
         }
 
         if ($paymentStatus === 'success') {
-            $this->qurbanService->markOrderAsSuccess($qurbanOrder, 'midtrans');
+            $this->qurbanService->markInstallmentAsSuccess($installment, 'midtrans');
             return;
         }
 
-        $qurbanOrder->update(['payment_status' => $paymentStatus]);
+        // 'failed' maupun 'expired' -> cicilan gagal, jamaah bisa bayar ulang (lihat catatan yang sama di QurbanOrderController).
+        if (in_array($paymentStatus, ['failed', 'expired'], true)) {
+            $installment->update(['payment_status' => 'failed']);
+        }
     }
 }

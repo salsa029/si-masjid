@@ -5,9 +5,11 @@ namespace App\Http\Controllers\Public;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Public\QurbanOrderRequest;
 use App\Models\DonationSetting;
+use App\Models\QurbanInstallment;
 use App\Models\QurbanOrder;
 use App\Models\QurbanParticipant;
 use App\Models\SacrificialAnimal;
+use App\Services\ImageUploadService;
 use App\Services\MidtransService;
 use App\Services\QurbanService;
 use Illuminate\Http\RedirectResponse;
@@ -23,6 +25,7 @@ class QurbanOrderController extends Controller
     public function __construct(
         protected MidtransService $midtransService,
         protected QurbanService $qurbanService,
+        protected ImageUploadService $imageUploadService,
     ) {}
 
     public function create(SacrificialAnimal $sacrificialAnimal): View
@@ -41,7 +44,12 @@ class QurbanOrderController extends Controller
             ->pluck('slot_number')
             ->toArray();
 
-        return view('public.qurban.orders.create', compact('sacrificialAnimal', 'takenSlots'));
+        // Cicilan hanya tersedia jika hewan terikat Qurban Activity dengan batas waktu masih tersisa
+        // minimal 2 hari lagi (supaya ada jarak yang wajar untuk minimal 2x cicilan).
+        $installmentDeadline = $sacrificialAnimal->activity?->end_date;
+        $installmentEligible = $installmentDeadline !== null && $installmentDeadline->gte(now()->addDays(2)->startOfDay());
+
+        return view('public.qurban.orders.create', compact('sacrificialAnimal', 'takenSlots', 'installmentEligible', 'installmentDeadline'));
     }
 
     public function store(QurbanOrderRequest $request, SacrificialAnimal $sacrificialAnimal): RedirectResponse
@@ -55,6 +63,32 @@ class QurbanOrderController extends Controller
                 throw ValidationException::withMessages([
                     'order_type' => 'Batas waktu pendaftaran kurban untuk kegiatan ini sudah berakhir.',
                 ]);
+            }
+
+            // Cegah oversell: pesanan 'full' (beli sendirian) tidak boleh dibuat kalau hewan ini
+            // sudah punya pesanan apapun (penuh maupun patungan), dan sebaliknya pesanan 'patungan'
+            // tidak boleh dibuat kalau hewan ini sudah dibeli penuh oleh orang lain.
+            if ($validated['order_type'] === 'full') {
+                $animalAlreadyTaken = QurbanOrder::where('sacrificial_animal_id', $lockedAnimal->id)
+                    ->whereIn('payment_status', ['pending', 'success'])
+                    ->exists();
+
+                if ($animalAlreadyTaken) {
+                    throw ValidationException::withMessages([
+                        'order_type' => 'Mohon maaf, hewan ini sudah ada yang memesan (penuh maupun patungan). Silakan pilih hewan lain.',
+                    ]);
+                }
+            } else {
+                $hasFullOrder = QurbanOrder::where('sacrificial_animal_id', $lockedAnimal->id)
+                    ->whereIn('payment_status', ['pending', 'success'])
+                    ->where('order_type', 'full')
+                    ->exists();
+
+                if ($hasFullOrder) {
+                    throw ValidationException::withMessages([
+                        'order_type' => 'Mohon maaf, hewan ini sudah dibeli penuh oleh Jamaah lain.',
+                    ]);
+                }
             }
 
             $slotNumber = $validated['order_type'] === 'patungan' ? (int) $validated['slot_number'] : 1;
@@ -76,11 +110,16 @@ class QurbanOrderController extends Controller
                 ? round($lockedAnimal->price / $lockedAnimal->max_participants)
                 : $lockedAnimal->price;
 
+            $isInstallment = $validated['payment_type'] === 'installment';
+
             $order = QurbanOrder::create([
                 'user_id' => Auth::id(),
                 'sacrificial_animal_id' => $lockedAnimal->id,
                 'order_type' => $validated['order_type'],
                 'total_amount' => $shareAmount,
+                'payment_type' => $validated['payment_type'],
+                'installment_count' => $isInstallment ? (int) $validated['installment_count'] : null,
+                'installment_deadline' => $isInstallment ? $lockedAnimal->activity->end_date : null,
                 'midtrans_order_id' => 'QRB-' . Str::uuid(),
                 'payment_method' => $validated['payment_method'],
                 'payment_status' => 'pending',
@@ -93,6 +132,10 @@ class QurbanOrderController extends Controller
                 'slot_number' => $slotNumber,
                 'share_amount' => $shareAmount,
             ]);
+
+            if ($isInstallment) {
+                $this->qurbanService->createInstallmentPlan($order, (int) $validated['installment_count'], $lockedAnimal->activity->end_date);
+            }
 
             return $order;
         });
@@ -108,8 +151,28 @@ class QurbanOrderController extends Controller
         }
 
         $snapToken = null;
+        $nextInstallment = null;
 
-        if ($qurbanOrder->payment_status === 'pending') {
+        if ($qurbanOrder->isInstallment()) {
+            $nextInstallment = $qurbanOrder->next_installment;
+
+            if (
+                $nextInstallment
+                && $qurbanOrder->payment_method === 'midtrans'
+                && in_array($nextInstallment->payment_status, ['pending', 'failed'], true)
+            ) {
+                $snapToken = $this->midtransService->getOrCreateSnapToken(
+                    $nextInstallment,
+                    orderId: $nextInstallment->midtrans_order_id,
+                    amount: (int) round($nextInstallment->amount),
+                    customerDetails: [
+                        'first_name' => Auth::user()?->name ?? 'Shohibul Qurban',
+                        'email' => Auth::user()?->email ?? 'guest@example.com',
+                    ],
+                    itemName: 'Cicilan ke-' . $nextInstallment->installment_number . ' Kurban ' . $qurbanOrder->animal->name,
+                );
+            }
+        } elseif ($qurbanOrder->payment_status === 'pending') {
             $snapToken = $this->midtransService->getOrCreateSnapToken(
                 $qurbanOrder,
                 orderId: $qurbanOrder->midtrans_order_id,
@@ -124,7 +187,7 @@ class QurbanOrderController extends Controller
 
         $settings = DonationSetting::firstOrNew();
 
-        return view('public.qurban.orders.pay', compact('qurbanOrder', 'snapToken', 'settings'));
+        return view('public.qurban.orders.pay', compact('qurbanOrder', 'snapToken', 'nextInstallment', 'settings'));
     }
 
     /**
@@ -138,7 +201,25 @@ class QurbanOrderController extends Controller
             abort_unless($qurbanOrder->user_id === Auth::id(), 403);
         }
 
-        if ($qurbanOrder->payment_status === 'pending' && $qurbanOrder->payment_method === 'midtrans') {
+        if ($qurbanOrder->payment_method !== 'midtrans') {
+            return redirect()->route('public.qurban.orders.pay', $qurbanOrder);
+        }
+
+        if ($qurbanOrder->isInstallment()) {
+            $nextInstallment = $qurbanOrder->next_installment;
+
+            if ($nextInstallment) {
+                $status = $this->midtransService->getPaymentStatus($nextInstallment->midtrans_order_id);
+
+                if ($status === 'success') {
+                    $this->qurbanService->markInstallmentAsSuccess($nextInstallment, 'midtrans');
+                } elseif ($status !== null && $status !== 'pending') {
+                    // 'failed' maupun 'expired' dari Midtrans -> cicilan ini gagal, jamaah bisa bayar ulang
+                    // (beda dengan payment_status pesanan penuh, cicilan tidak punya status 'expired' sendiri).
+                    $nextInstallment->update(['payment_status' => 'failed']);
+                }
+            }
+        } elseif ($qurbanOrder->payment_status === 'pending') {
             $status = $this->midtransService->getPaymentStatus($qurbanOrder->midtrans_order_id);
 
             if ($status === 'success') {
@@ -149,6 +230,59 @@ class QurbanOrderController extends Controller
         }
 
         return redirect()->route('public.qurban.orders.pay', $qurbanOrder);
+    }
+
+    /**
+     * Upload bukti transfer manual untuk satu cicilan tertentu.
+     */
+    public function uploadInstallmentProof(Request $request, QurbanOrder $qurbanOrder, QurbanInstallment $installment): RedirectResponse
+    {
+        abort_unless($qurbanOrder->user_id === Auth::id(), 403);
+        abort_unless($installment->qurban_order_id === $qurbanOrder->id, 404);
+        abort_unless($qurbanOrder->payment_method === 'manual_transfer', 404);
+        abort_unless(in_array($installment->payment_status, ['pending', 'failed'], true), 400);
+
+        $request->validate([
+            'payment_proof' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+        ], [
+            'payment_proof.required' => 'Bukti pembayaran wajib diunggah.',
+        ]);
+
+        $path = $this->imageUploadService->upload(
+            $request->file('payment_proof'),
+            folder: 'qurban-payment-proofs'
+        );
+
+        $installment->update([
+            'payment_proof' => $path,
+            'payment_status' => 'awaiting_verification',
+        ]);
+
+        return redirect()
+            ->route('public.qurban.orders.pay', $qurbanOrder)
+            ->with('success', 'Bukti pembayaran cicilan ke-' . $installment->installment_number . ' berhasil diunggah. Mohon tunggu verifikasi dari Admin.');
+    }
+
+    /**
+     * Jamaah mengajukan permintaan refund untuk dana cicilan yang sudah dibayar, sebelum batas
+     * waktu pelunasan. Kalau tidak diajukan, dana yang sudah masuk otomatis dialihkan jadi infaq
+     * apabila cicilan tidak lunas hingga batas waktu.
+     */
+    public function requestRefund(QurbanOrder $qurbanOrder): RedirectResponse
+    {
+        abort_unless($qurbanOrder->user_id === Auth::id(), 403);
+        abort_unless($qurbanOrder->isInstallment(), 404);
+        abort_unless($qurbanOrder->payment_status === 'pending', 400);
+        abort_if($qurbanOrder->refund_requested, 400, 'Permintaan refund untuk pesanan ini sudah pernah diajukan.');
+
+        $qurbanOrder->update([
+            'refund_requested' => true,
+            'refund_requested_at' => now(),
+        ]);
+
+        return redirect()
+            ->route('public.qurban.orders.pay', $qurbanOrder)
+            ->with('success', 'Permintaan refund berhasil dicatat. Jika cicilan tidak lunas hingga batas waktu, dana yang sudah dibayar akan dikembalikan oleh Admin (bukan dialihkan menjadi infaq).');
     }
 
     /**

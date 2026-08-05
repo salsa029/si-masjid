@@ -10,3 +10,4 @@ Artisan::command('inspire', function () {
 
 Schedule::command('qurban:release-expired-bookings')->hourly();
 Schedule::command('donation:release-expired-bookings')->hourly();
+Schedule::command('qurban:process-overdue-installments')->daily();

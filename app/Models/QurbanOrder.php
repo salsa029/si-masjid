@@ -17,6 +17,11 @@ class QurbanOrder extends Model
         'sacrificial_animal_id',
         'order_type',
         'total_amount',
+        'payment_type',
+        'installment_count',
+        'installment_deadline',
+        'refund_requested',
+        'refund_requested_at',
         'midtrans_order_id',
         'snap_token',
         'snap_token_expires_at',
@@ -40,6 +45,9 @@ class QurbanOrder extends Model
             'verified_at' => 'datetime',
             'reserved_until' => 'datetime',
             'snap_token_expires_at' => 'datetime',
+            'installment_deadline' => 'date',
+            'refund_requested' => 'boolean',
+            'refund_requested_at' => 'datetime',
         ];
     }
 
@@ -56,5 +64,39 @@ class QurbanOrder extends Model
     public function participants(): HasMany
     {
         return $this->hasMany(QurbanParticipant::class);
+    }
+
+    public function installments(): HasMany
+    {
+        return $this->hasMany(QurbanInstallment::class)->orderBy('installment_number');
+    }
+
+    public function isInstallment(): bool
+    {
+        return $this->payment_type === 'installment';
+    }
+
+    /**
+     * Cicilan berikutnya yang belum lunas (null jika sudah lunas semua atau bukan pesanan cicilan).
+     */
+    public function getNextInstallmentAttribute(): ?QurbanInstallment
+    {
+        if (! $this->isInstallment()) {
+            return null;
+        }
+
+        return $this->installments->firstWhere('payment_status', '!=', 'success');
+    }
+
+    /**
+     * Total yang sudah dibayar sejauh ini (menjumlahkan cicilan sukses, atau total_amount jika lunas penuh).
+     */
+    public function getAmountPaidAttribute(): float
+    {
+        if ($this->isInstallment()) {
+            return (float) $this->installments->where('payment_status', 'success')->sum('amount');
+        }
+
+        return $this->payment_status === 'success' ? (float) $this->total_amount : 0.0;
     }
 }

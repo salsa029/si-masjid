@@ -83,6 +83,65 @@
                     </div>
                 @endif
 
+                <!-- Payment Type (Penuh / Cicilan) -->
+                <div>
+                    <label class="mb-2 block text-sm font-medium text-gray-700">Cara Bayar</label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <label
+                            class="flex cursor-pointer items-center gap-2 rounded-xl border p-3 transition hover:border-green-500 has-[:checked]:border-green-600 has-[:checked]:bg-green-50">
+                            <input type="radio" name="payment_type" value="full"
+                                @checked(old('payment_type', 'full') === 'full')>
+                            <span class="text-sm">Bayar Penuh</span>
+                        </label>
+                        <label
+                            class="{{ $installmentEligible ? '' : 'cursor-not-allowed opacity-50' }} flex cursor-pointer items-center gap-2 rounded-xl border p-3 transition hover:border-green-500 has-[:checked]:border-green-600 has-[:checked]:bg-green-50">
+                            <input type="radio" name="payment_type" value="installment"
+                                {{ $installmentEligible ? '' : 'disabled' }} @checked(old('payment_type') === 'installment')>
+                            <span class="text-sm">Cicilan</span>
+                        </label>
+                    </div>
+                    @if (! $installmentEligible)
+                        <p class="mt-2 text-xs text-gray-400">
+                            <i class="fas fa-info-circle mr-1" aria-hidden="true"></i>
+                            Cicilan tidak tersedia untuk hewan ini (kegiatan kurban belum ditentukan atau batas
+                            pendaftarannya sudah terlalu dekat).
+                        </p>
+                    @endif
+                    @error('payment_type')
+                        <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                @if ($installmentEligible)
+                    <div id="installment-count-selection">
+                        <label class="mb-2 block text-sm font-medium text-gray-700">Jumlah Cicilan</label>
+                        <div class="grid grid-cols-2 gap-3">
+                            <label
+                                class="flex cursor-pointer items-center gap-2 rounded-xl border p-3 transition hover:border-green-500 has-[:checked]:border-green-600 has-[:checked]:bg-green-50">
+                                <input type="radio" name="installment_count" value="2"
+                                    @checked(old('installment_count', '2') == '2')>
+                                <span class="text-sm">2x Cicilan</span>
+                            </label>
+                            <label
+                                class="flex cursor-pointer items-center gap-2 rounded-xl border p-3 transition hover:border-green-500 has-[:checked]:border-green-600 has-[:checked]:bg-green-50">
+                                <input type="radio" name="installment_count" value="3"
+                                    @checked(old('installment_count') == '3')>
+                                <span class="text-sm">3x Cicilan</span>
+                            </label>
+                        </div>
+                        <p class="mt-2 text-xs text-gray-400">
+                            <i class="fas fa-info-circle mr-1" aria-hidden="true"></i>
+                            Cicilan pertama dibayar sekarang, cicilan terakhir paling lambat
+                            {{ $installmentDeadline->translatedFormat('d F Y') }}. Jika tidak lunas sampai tanggal
+                            tersebut, slot akan dilepas dan dana yang sudah dibayar dialihkan menjadi infaq (kecuali
+                            Anda mengajukan refund sebelumnya).
+                        </p>
+                        @error('installment_count')
+                            <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                        @enderror
+                    </div>
+                @endif
+
                 <!-- Payment Method -->
                 <div>
                     <label class="mb-2 block text-sm font-medium text-gray-700">Metode Pembayaran</label>
@@ -150,6 +209,19 @@
         const initialOrderType = document.querySelector('input[name="order_type"]:checked');
         if (initialOrderType) {
             initialOrderType.dispatchEvent(new Event('change'));
+        }
+
+        // Toggle jumlah cicilan berdasarkan cara bayar yang dipilih
+        const installmentCountSelection = document.getElementById('installment-count-selection');
+        if (installmentCountSelection) {
+            document.querySelectorAll('input[name="payment_type"]').forEach(function(radio) {
+                radio.addEventListener('change', function() {
+                    installmentCountSelection.style.display = this.value === 'installment' ? 'block' : 'none';
+                });
+            });
+
+            const initialPaymentType = document.querySelector('input[name="payment_type"]:checked');
+            installmentCountSelection.style.display = initialPaymentType && initialPaymentType.value === 'installment' ? 'block' : 'none';
         }
     </script>
 @endsection

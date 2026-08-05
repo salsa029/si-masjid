@@ -30,6 +30,7 @@ use App\Http\Controllers\Admin\SlaughterDocumentationController;
 use App\Http\Controllers\Admin\FinancialReportController;
 use App\Http\Controllers\Admin\AuditTrailController;
 use App\Http\Controllers\Admin\QurbanVerificationController;
+use App\Http\Controllers\Admin\QurbanInstallmentVerificationController;
 use App\Http\Controllers\Admin\QurbanDashboardController;
 use App\Http\Controllers\Admin\DonationDashboardController;
 use App\Http\Controllers\Admin\DonationSettingController;
@@ -89,6 +90,7 @@ Route::get('/kurban/{sacrificialAnimal}', [QurbanController::class, 'show'])->na
 
 // Rute Publik Infaq & Zakat
 Route::get('/infaq', [PublicInfaqController::class, 'index'])->name('public.infaq.index');
+Route::get('/infaq/transparansi', [PublicInfaqController::class, 'transparency'])->name('public.infaq.transparency');
 Route::get('/infaq/campaign/{infaqCampaign:slug}', [PublicInfaqController::class, 'campaign'])->name('public.infaq.campaign');
 Route::get('/zakat', [PublicZakatController::class, 'index'])->name('public.zakat.index');
 
@@ -168,6 +170,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/{qurbanOrder}/cek-status', [QurbanOrderController::class, 'checkStatus'])->name('check-status');
         Route::get('/{qurbanOrder}/kuitansi', [QurbanController::class, 'receipt'])->name('receipt');
         Route::post('/{qurbanOrder}/bukti-pembayaran', [QurbanController::class, 'uploadProof'])->name('upload-proof');
+        Route::post('/{qurbanOrder}/cicilan/{installment}/bukti-pembayaran', [QurbanOrderController::class, 'uploadInstallmentProof'])->name('installments.upload-proof');
+        Route::post('/{qurbanOrder}/minta-refund', [QurbanOrderController::class, 'requestRefund'])->name('request-refund');
         Route::get('/{qurbanOrder}/sertifikat', [QurbanController::class, 'certificate'])->name('certificate');
         Route::delete('/{qurbanOrder}', [QurbanOrderController::class, 'destroy'])->name('destroy');
     });
@@ -246,6 +250,14 @@ Route::middleware(['auth', 'verified', 'role:admin'])
             Route::get('/{qurbanOrder}', [QurbanVerificationController::class, 'show'])->name('show');
             Route::put('/{qurbanOrder}/approve', [QurbanVerificationController::class, 'approve'])->name('approve');
             Route::put('/{qurbanOrder}/reject', [QurbanVerificationController::class, 'reject'])->name('reject');
+        });
+
+        // Rute Verifikasi Cicilan Kurban (ADMIN)
+        Route::prefix('qurban-installment-verifications')->name('qurban-installment-verifications.')->group(function () {
+            Route::get('/', [QurbanInstallmentVerificationController::class, 'index'])->name('index');
+            Route::get('/{installment}', [QurbanInstallmentVerificationController::class, 'show'])->name('show');
+            Route::put('/{installment}/approve', [QurbanInstallmentVerificationController::class, 'approve'])->name('approve');
+            Route::put('/{installment}/reject', [QurbanInstallmentVerificationController::class, 'reject'])->name('reject');
         });
 
         // Modul Manajemen Infaq (ADMIN)

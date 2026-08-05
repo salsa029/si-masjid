@@ -105,6 +105,10 @@
         :class="collapsed ? 'lg:justify-center' : ''">
         <i class="fas fa-hand-holding-heart w-5 flex-shrink-0 text-center" aria-hidden="true"></i>
         <span class="flex-1" :class="collapsed ? 'lg:hidden' : ''">Donasi &amp; Infaq</span>
+        @if ($donasiPendingVerifications > 0)
+            <span class="rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-semibold text-white"
+                :class="collapsed ? 'lg:hidden' : ''">{{ $donasiPendingVerifications }}</span>
+        @endif
         <i class="fas fa-chevron-down text-[10px] transition-transform duration-300"
             :class="[open ? 'rotate-180' : '', collapsed ? 'lg:hidden' : '']" aria-hidden="true"></i>
     </button>
@@ -163,7 +167,12 @@
 
     <div
         class="sb-tooltip sidebar-scroll pointer-events-none absolute left-full top-0 z-50 ml-3 hidden max-h-96 w-56 space-y-0.5 overflow-y-auto rounded-xl bg-emerald-950 p-2 shadow-xl lg:block">
-        <p class="px-2 pb-1 text-[11px] font-semibold uppercase tracking-wide text-emerald-400">Donasi &amp; Infaq</p>
+        <p class="flex items-center justify-between px-2 pb-1 text-[11px] font-semibold uppercase tracking-wide text-emerald-400">
+            <span>Donasi &amp; Infaq</span>
+            @if ($donasiPendingVerifications > 0)
+                <span class="rounded-full bg-red-500 px-1.5 text-[10px] font-semibold normal-case text-white">{{ $donasiPendingVerifications }}</span>
+            @endif
+        </p>
         <a href="{{ route('admin.donation-dashboard.index') }}"
             class="block rounded-lg px-2 py-1.5 text-sm text-emerald-100 hover:bg-white/10">Dashboard Donasi</a>
         <a href="{{ route('admin.infaqs.index') }}"
@@ -202,6 +211,10 @@
         :class="collapsed ? 'lg:justify-center' : ''">
         <i class="fas fa-cow w-5 flex-shrink-0 text-center" aria-hidden="true"></i>
         <span class="flex-1" :class="collapsed ? 'lg:hidden' : ''">Kurban</span>
+        @if ($kurbanPendingVerifications > 0)
+            <span class="rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-semibold text-white"
+                :class="collapsed ? 'lg:hidden' : ''">{{ $kurbanPendingVerifications }}</span>
+        @endif
         <i class="fas fa-chevron-down text-[10px] transition-transform duration-300"
             :class="[open ? 'rotate-180' : '', collapsed ? 'lg:hidden' : '']" aria-hidden="true"></i>
     </button>
@@ -232,11 +245,25 @@
                     class="rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-semibold text-white">{{ $pendingQurbanVerifications }}</span>
             @endif
         </a>
+        <a href="{{ route('admin.qurban-installment-verifications.index') }}"
+            class="sidebar-sub-item {{ request()->routeIs('admin.qurban-installment-verifications.*') ? 'active' : 'text-emerald-200' }} flex items-center gap-3 rounded-lg py-2.5 pl-8 pr-3">
+            <i class="fas fa-layer-group w-4 text-center text-xs" aria-hidden="true"></i>
+            <span class="flex-1">Verifikasi Cicilan</span>
+            @if ($pendingQurbanInstallmentVerifications > 0)
+                <span
+                    class="rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-semibold text-white">{{ $pendingQurbanInstallmentVerifications }}</span>
+            @endif
+        </a>
     </div>
 
     <div
         class="sb-tooltip pointer-events-none absolute left-full top-0 z-50 ml-3 hidden w-56 space-y-0.5 rounded-xl bg-emerald-950 p-2 shadow-xl lg:block">
-        <p class="px-2 pb-1 text-[11px] font-semibold uppercase tracking-wide text-emerald-400">Kurban</p>
+        <p class="flex items-center justify-between px-2 pb-1 text-[11px] font-semibold uppercase tracking-wide text-emerald-400">
+            <span>Kurban</span>
+            @if ($kurbanPendingVerifications > 0)
+                <span class="rounded-full bg-red-500 px-1.5 text-[10px] font-semibold normal-case text-white">{{ $kurbanPendingVerifications }}</span>
+            @endif
+        </p>
         <a href="{{ route('admin.qurban-activities.index') }}"
             class="block rounded-lg px-2 py-1.5 text-sm text-emerald-100 hover:bg-white/10">Qurban Activity</a>
         <a href="{{ route('admin.sacrificial-animals.index') }}"
@@ -249,6 +276,14 @@
             @if ($pendingQurbanVerifications > 0)
                 <span
                     class="rounded-full bg-red-500 px-1.5 text-[10px] font-semibold text-white">{{ $pendingQurbanVerifications }}</span>
+            @endif
+        </a>
+        <a href="{{ route('admin.qurban-installment-verifications.index') }}"
+            class="flex items-center justify-between rounded-lg px-2 py-1.5 text-sm text-emerald-100 hover:bg-white/10">Verifikasi
+            Cicilan
+            @if ($pendingQurbanInstallmentVerifications > 0)
+                <span
+                    class="rounded-full bg-red-500 px-1.5 text-[10px] font-semibold text-white">{{ $pendingQurbanInstallmentVerifications }}</span>
             @endif
         </a>
     </div>

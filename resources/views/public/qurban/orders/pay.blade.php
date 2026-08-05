@@ -25,7 +25,122 @@
                 </div>
 
                 <!-- Payment Status -->
-                @if ($qurbanOrder->payment_status === 'pending' && $qurbanOrder->payment_method === 'midtrans')
+                @if ($qurbanOrder->isInstallment() && $qurbanOrder->payment_status === 'pending')
+                    <div class="space-y-4 text-left">
+                        <div class="rounded-xl bg-gray-50 p-4 text-sm">
+                            <div class="mb-3 flex justify-between text-xs text-gray-500">
+                                <span>Sudah dibayar: <strong class="text-green-700">Rp
+                                        {{ number_format($qurbanOrder->amount_paid, 0, ',', '.') }}</strong></span>
+                                <span>Sisa: <strong>Rp
+                                        {{ number_format($qurbanOrder->total_amount - $qurbanOrder->amount_paid, 0, ',', '.') }}</strong></span>
+                            </div>
+                            <div class="space-y-2">
+                                @foreach ($qurbanOrder->installments as $installment)
+                                    <div class="flex items-center justify-between rounded-lg border border-gray-200 bg-white px-3 py-2">
+                                        <div>
+                                            <p class="text-sm font-medium">Cicilan ke-{{ $installment->installment_number }}</p>
+                                            <p class="text-xs text-gray-400">Jatuh tempo
+                                                {{ $installment->due_date->translatedFormat('d F Y') }} · Rp
+                                                {{ number_format($installment->amount, 0, ',', '.') }}</p>
+                                        </div>
+                                        @php
+                                            $badge = match ($installment->payment_status) {
+                                                'success' => ['bg-green-100 text-green-700', 'Lunas'],
+                                                'awaiting_verification' => ['bg-amber-100 text-amber-700', 'Diverifikasi'],
+                                                'failed' => ['bg-red-100 text-red-700', 'Perlu Diulang'],
+                                                default => ['bg-gray-100 text-gray-500', 'Menunggu'],
+                                            };
+                                        @endphp
+                                        <span class="{{ $badge[0] }} rounded-full px-2.5 py-1 text-xs font-medium">{{ $badge[1] }}</span>
+                                    </div>
+                                @endforeach
+                            </div>
+                            <p class="mt-3 text-xs font-medium text-amber-600">
+                                <i class="fas fa-clock mr-1" aria-hidden="true"></i>
+                                Batas waktu pelunasan: {{ $qurbanOrder->installment_deadline?->translatedFormat('d F Y') }}
+                            </p>
+                        </div>
+
+                        @if ($nextInstallment && $qurbanOrder->payment_method === 'midtrans')
+                            <p class="text-sm text-gray-600">Klik tombol di bawah untuk membayar cicilan ke-{{ $nextInstallment->installment_number }}
+                                (Rp {{ number_format($nextInstallment->amount, 0, ',', '.') }}).</p>
+                            <button id="pay-button"
+                                class="w-full rounded-xl bg-gradient-to-r from-green-600 to-green-700 py-3.5 font-semibold text-white shadow-lg transition hover:from-green-700 hover:to-green-800 hover:shadow-xl">
+                                <i class="fas fa-credit-card mr-2" aria-hidden="true"></i>
+                                Bayar Cicilan ke-{{ $nextInstallment->installment_number }}
+                            </button>
+                            <a href="{{ route('public.qurban.orders.check-status', $qurbanOrder) }}"
+                                class="block text-xs text-gray-400 underline">
+                                Sudah bayar? Cek Status Pembayaran
+                            </a>
+                        @elseif ($nextInstallment && $qurbanOrder->payment_method === 'manual_transfer' && in_array($nextInstallment->payment_status, ['pending', 'failed']))
+                            <div class="space-y-2 rounded-xl bg-gray-50 p-4 text-sm">
+                                @if (($settings->bank_account_number ?? null))
+                                    <p class="font-medium text-gray-700">Transfer cicilan ke-{{ $nextInstallment->installment_number }} ke
+                                        rekening berikut:</p>
+                                    <div class="rounded-lg border border-gray-200 bg-white p-3">
+                                        <p><span class="text-gray-500">Bank:</span>
+                                            <strong>{{ $settings->bank_name }}</strong></p>
+                                        <p><span class="text-gray-500">No. Rekening:</span>
+                                            <strong>{{ $settings->bank_account_number }}</strong></p>
+                                        <p><span class="text-gray-500">Atas Nama:</span>
+                                            <strong>{{ $settings->bank_account_name }}</strong></p>
+                                    </div>
+                                @else
+                                    <p class="text-amber-600">Rekening transfer belum diatur oleh Admin. Silakan hubungi
+                                        pengurus masjid untuk info rekening.</p>
+                                @endif
+                            </div>
+
+                            <form method="POST"
+                                action="{{ route('public.qurban.orders.installments.upload-proof', [$qurbanOrder, $nextInstallment]) }}"
+                                enctype="multipart/form-data" x-data="{ submitting: false }" @submit="submitting = true">
+                                @csrf
+                                <div>
+                                    <label class="mb-1 block text-sm font-medium text-gray-700">Unggah Bukti Transfer Cicilan
+                                        ke-{{ $nextInstallment->installment_number }}</label>
+                                    <input type="file" name="payment_proof" accept="image/*"
+                                        class="w-full rounded-xl border border-gray-300 p-2.5 text-sm focus:border-transparent focus:ring-2 focus:ring-green-500">
+                                    @error('payment_proof')
+                                        <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                                    @enderror
+                                </div>
+                                <button type="submit" :disabled="submitting"
+                                    class="w-full rounded-xl bg-gradient-to-r from-green-600 to-green-700 py-3 font-semibold text-white transition hover:from-green-700 hover:to-green-800 disabled:cursor-not-allowed disabled:opacity-50">
+                                    <span x-show="!submitting">Kirim Bukti Pembayaran</span>
+                                    <span x-show="submitting" x-cloak>
+                                        <i class="fas fa-spinner fa-spin mr-2" aria-hidden="true"></i> Mengunggah...
+                                    </span>
+                                </button>
+                            </form>
+                        @elseif ($nextInstallment && $nextInstallment->payment_status === 'awaiting_verification')
+                            <div class="rounded-xl bg-amber-50 p-4 text-sm text-amber-700">
+                                <i class="fas fa-clock mb-1 block text-lg" aria-hidden="true"></i>
+                                <p class="font-medium">Menunggu Verifikasi Admin</p>
+                                <p class="mt-1 text-xs">Bukti pembayaran cicilan ke-{{ $nextInstallment->installment_number }} sedang
+                                    diperiksa. Proses ini maksimal 1x24 jam.</p>
+                            </div>
+                        @endif
+
+                        @if ($qurbanOrder->amount_paid > 0)
+                            @if ($qurbanOrder->refund_requested)
+                                <p class="text-center text-xs text-gray-400">
+                                    <i class="fas fa-check mr-1" aria-hidden="true"></i>
+                                    Permintaan refund sudah diajukan pada
+                                    {{ $qurbanOrder->refund_requested_at?->translatedFormat('d F Y, H:i') }} WIB.
+                                </p>
+                            @else
+                                <form method="POST" action="{{ route('public.qurban.orders.request-refund', $qurbanOrder) }}"
+                                    onsubmit="return confirm('Ajukan permintaan refund untuk dana yang sudah dibayar? Ini hanya berlaku jika cicilan tidak lunas hingga batas waktu.');">
+                                    @csrf
+                                    <button type="submit" class="w-full text-center text-xs text-gray-400 underline hover:text-gray-600">
+                                        Tidak bisa melanjutkan cicilan? Ajukan refund dana yang sudah dibayar
+                                    </button>
+                                </form>
+                            @endif
+                        @endif
+                    </div>
+                @elseif ($qurbanOrder->payment_status === 'pending' && $qurbanOrder->payment_method === 'midtrans')
                     <div class="space-y-4">
                         <p class="text-sm text-gray-600">Klik tombol di bawah untuk melanjutkan pembayaran melalui Midtrans.
                         </p>
@@ -101,13 +216,11 @@
                             <i class="fas fa-file-pdf mr-2" aria-hidden="true"></i>
                             Unduh E-Kuitansi
                         </a>
-                        @if ($qurbanOrder->animal && $qurbanOrder->animal->status === 'slaughtered')
-                            <a href="{{ route('public.qurban.orders.certificate', $qurbanOrder) }}"
-                                class="flex-1 rounded-xl bg-amber-600 py-2.5 text-center text-sm font-medium text-white transition hover:bg-amber-700">
-                                <i class="fas fa-certificate mr-2" aria-hidden="true"></i>
-                                Unduh Sertifikat
-                            </a>
-                        @endif
+                        <a href="{{ route('public.qurban.orders.certificate', $qurbanOrder) }}"
+                            class="flex-1 rounded-xl bg-amber-600 py-2.5 text-center text-sm font-medium text-white transition hover:bg-amber-700">
+                            <i class="fas fa-certificate mr-2" aria-hidden="true"></i>
+                            Unduh Sertifikat
+                        </a>
                     </div>
                 @else
                     <div class="rounded-xl bg-red-50 p-5 text-sm text-red-700">

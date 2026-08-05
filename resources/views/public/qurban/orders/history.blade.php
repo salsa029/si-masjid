@@ -96,7 +96,12 @@
                                     <td class="px-4 py-3 font-medium text-gray-700">{{ $order->invoice_number ?? '-' }}</td>
                                     <td class="px-4 py-3 text-gray-700">{{ $order->animal->name ?? '-' }}</td>
                                     <td class="px-4 py-3 text-gray-500">
-                                        {{ $order->order_type === 'full' ? 'Penuh' : 'Patungan' }}</td>
+                                        {{ $order->order_type === 'full' ? 'Penuh' : 'Patungan' }}
+                                        @if ($order->isInstallment())
+                                            <span class="ml-1 rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700">Cicilan
+                                                {{ $order->installment_count }}x</span>
+                                        @endif
+                                    </td>
                                     <td class="px-4 py-3 text-right font-medium text-gray-800">
                                         Rp {{ number_format($order->total_amount, 0, ',', '.') }}
                                     </td>
@@ -135,12 +140,10 @@
                                                     class="text-xs font-medium text-green-600 transition hover:text-green-800">
                                                     <i class="fas fa-file-pdf" aria-hidden="true"></i> Kuitansi
                                                 </a>
-                                                @if ($order->animal && $order->animal->status === 'slaughtered')
-                                                    <a href="{{ route('public.qurban.orders.certificate', $order) }}"
-                                                        class="text-xs font-medium text-amber-600 transition hover:text-amber-800">
-                                                        <i class="fas fa-certificate" aria-hidden="true"></i> Sertifikat
-                                                    </a>
-                                                @endif
+                                                <a href="{{ route('public.qurban.orders.certificate', $order) }}"
+                                                    class="text-xs font-medium text-amber-600 transition hover:text-amber-800">
+                                                    <i class="fas fa-certificate" aria-hidden="true"></i> Sertifikat
+                                                </a>
                                             @else
                                                 <span class="text-gray-400">-</span>
                                             @endif
