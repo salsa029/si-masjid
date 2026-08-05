@@ -341,10 +341,15 @@
                         aria-label="Buka menu akun admin"
                         class="flex items-center gap-2 rounded-lg px-2 py-1.5 transition-colors hover:bg-gray-100">
                         <span class="hidden text-sm text-gray-600 md:inline">{{ auth()->user()->name }}</span>
-                        <div
-                            class="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-green-500 to-green-700 text-white shadow-md">
-                            <i class="fas fa-user text-sm" aria-hidden="true"></i>
-                        </div>
+                        @if (auth()->user()->avatar_url)
+                            <img src="{{ auth()->user()->avatar_url }}" alt="{{ auth()->user()->name }}"
+                                class="h-8 w-8 rounded-full object-cover shadow-md">
+                        @else
+                            <div
+                                class="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-green-500 to-green-700 text-white shadow-md">
+                                <i class="fas fa-user text-sm" aria-hidden="true"></i>
+                            </div>
+                        @endif
                         <i class="fas fa-chevron-down hidden text-[10px] text-gray-400 transition-transform duration-200 md:inline"
                             :class="open ? 'rotate-180' : ''" aria-hidden="true"></i>
                     </button>
@@ -354,6 +359,11 @@
                         <div class="border-b border-gray-100 px-4 py-2 md:hidden">
                             <p class="truncate text-sm font-medium text-gray-700">{{ auth()->user()->name }}</p>
                         </div>
+                        <a href="{{ route('profile.edit') }}"
+                            class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-gray-700 transition-colors hover:bg-gray-50">
+                            <i class="fas fa-user-circle w-4 text-center text-gray-400" aria-hidden="true"></i>
+                            Edit Profil
+                        </a>
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
                             <button type="submit"

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Services\ImageUploadService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -11,6 +12,10 @@ use Illuminate\View\View;
 
 class ProfileController extends Controller
 {
+    public function __construct(private readonly ImageUploadService $imageUploadService)
+    {
+    }
+
     /**
      * Display the user's profile form.
      */
@@ -26,13 +31,24 @@ class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $request->user()->fill($request->validated());
+        $user = $request->user();
 
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
+        $user->fill($request->safe()->except('avatar'));
+
+        if ($request->hasFile('avatar')) {
+            $user->avatar = $this->imageUploadService->upload(
+                $request->file('avatar'),
+                folder: 'avatars',
+                maxWidth: 512,
+                oldPath: $user->avatar,
+            );
         }
 
-        $request->user()->save();
+        if ($user->isDirty('email')) {
+            $user->email_verified_at = null;
+        }
+
+        $user->save();
 
         return Redirect::route('profile.edit')->with('status', 'profile-updated');
     }

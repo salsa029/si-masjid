@@ -64,10 +64,15 @@ NAVBAR
                 @auth
                     <div class="profile-dropdown hidden md:block" x-data="{ open: false }" @click.outside="open = false">
                         <button class="profile-btn" @click="open = !open" :aria-expanded="open.toString()">
-                            <div
-                                class="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-green-500 to-green-700 text-white shadow-md">
-                                <i class="fas fa-user text-sm" aria-hidden="true"></i>
-                            </div>
+                            @if (Auth::user()->avatar_url)
+                                <img src="{{ Auth::user()->avatar_url }}" alt="{{ Auth::user()->name }}"
+                                    class="h-8 w-8 rounded-full object-cover shadow-md">
+                            @else
+                                <div
+                                    class="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-green-500 to-green-700 text-white shadow-md">
+                                    <i class="fas fa-user text-sm" aria-hidden="true"></i>
+                                </div>
+                            @endif
                             <span
                                 class="hidden text-sm font-medium text-gray-700 lg:inline">{{ Auth::user()->name }}</span>
                             <i class="fas fa-chevron-down ml-1 text-xs text-gray-400 transition-transform duration-200"
@@ -93,6 +98,11 @@ NAVBAR
                                     Dashboard Admin
                                 </a>
                             @endif
+
+                            <a href="{{ route('profile.edit') }}" class="dropdown-item" role="menuitem">
+                                <i class="fas fa-user-circle text-gray-400" aria-hidden="true"></i>
+                                Edit Profil
+                            </a>
 
                             <a href="{{ route('public.infaq.history') }}" class="dropdown-item" role="menuitem">
                                 <i class="fas fa-hand-holding-heart text-gray-400" aria-hidden="true"></i>
@@ -196,9 +206,14 @@ NAVBAR
                 <div class="mt-4 border-t border-gray-200 pt-4">
                     @auth
                         <div class="flex items-center gap-3 px-3 py-2">
-                            <div class="flex h-10 w-10 items-center justify-center rounded-full bg-green-600 text-white">
-                                <i class="fas fa-user text-sm" aria-hidden="true"></i>
-                            </div>
+                            @if (Auth::user()->avatar_url)
+                                <img src="{{ Auth::user()->avatar_url }}" alt="{{ Auth::user()->name }}"
+                                    class="h-10 w-10 rounded-full object-cover">
+                            @else
+                                <div class="flex h-10 w-10 items-center justify-center rounded-full bg-green-600 text-white">
+                                    <i class="fas fa-user text-sm" aria-hidden="true"></i>
+                                </div>
+                            @endif
                             <div>
                                 <p class="font-medium text-gray-900">{{ Auth::user()->name }}</p>
                                 <p class="text-xs text-gray-500">{{ Auth::user()->email }}</p>
@@ -211,6 +226,11 @@ NAVBAR
                                     Dashboard Admin
                                 </a>
                             @endif
+
+                            <a href="{{ route('profile.edit') }}" class="mobile-link">
+                                <i class="fas fa-user-circle w-5 text-center text-gray-400" aria-hidden="true"></i>
+                                Edit Profil
+                            </a>
 
                             <a href="{{ route('public.infaq.history') }}" class="mobile-link">
                                 <i class="fas fa-hand-holding-heart w-5 text-center text-gray-400" aria-hidden="true"></i>
