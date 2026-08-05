@@ -8,6 +8,7 @@ use App\Models\Committee;
 use App\Models\DonationSetting;
 use App\Models\Event;
 use App\Models\Infaq;
+use App\Models\InfaqCampaign;
 use App\Models\MosqueProfile;
 use App\Models\QurbanParticipant;
 use App\Models\SacrificialAnimal;
@@ -53,6 +54,15 @@ class HomeController extends Controller
 
         $donationSettings = DonationSetting::firstOrNew();
 
+        // Campaign infaq yang sedang berjalan, ditampilkan di Beranda
+        $activeCampaigns = InfaqCampaign::where('status', 'active')
+            ->where(function ($query) {
+                $query->whereNull('end_date')->orWhere('end_date', '>=', now()->toDateString());
+            })
+            ->latest('start_date')
+            ->take(3)
+            ->get();
+
         // Statistik ringkas untuk section Hero (hanya pengurus yang masa jabatannya masih berjalan)
         $activeCommitteeCount = Committee::where(function ($query) {
             $query->whereNull('term_end')->orWhere('term_end', '>=', now());
@@ -89,6 +99,7 @@ class HomeController extends Controller
             'latestEvents',
             'featuredEvent',
             'donationSettings',
+            'activeCampaigns',
             'activeCommitteeCount',
             'publishedEventCount',
             'publishedArticleCount',

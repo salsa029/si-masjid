@@ -228,6 +228,77 @@
         </div>
     </section>
 
+    <!-- ===== CAMPAIGN INFAQ ===== -->
+    @if ($activeCampaigns->isNotEmpty())
+        <section id="campaigns" class="bg-white py-16 md:py-20" data-reveal>
+            <div class="container mx-auto px-4">
+                <div class="mb-12 text-center">
+                    <span
+                        class="inline-block rounded-full bg-green-100 px-4 py-1 text-sm font-semibold text-green-700">Campaign
+                        Infaq</span>
+                    <h2 class="mt-3 text-3xl font-extrabold text-green-800 md:text-4xl">Sedang <span
+                            class="text-green-600">Berlangsung</span></h2>
+                    <div class="mx-auto mt-4 h-1 w-24 rounded-full bg-gradient-to-r from-green-600 to-green-400"></div>
+                    <p class="mx-auto mt-4 max-w-2xl text-gray-500">
+                        Yuk ikut berpartisipasi dalam campaign infaq yang sedang berjalan di Masjid An-Nur.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                    @foreach ($activeCampaigns as $campaign)
+                        <a href="{{ route('public.infaq.campaign', $campaign->slug) }}"
+                            class="card-hover group flex flex-col overflow-hidden rounded-2xl bg-white shadow-md">
+                            <div class="relative h-48 overflow-hidden">
+                                @if ($campaign->thumbnail)
+                                    <img src="{{ Storage::url($campaign->thumbnail) }}" alt="{{ $campaign->title }}"
+                                        class="card-image h-full w-full object-cover" loading="lazy">
+                                @else
+                                    <div
+                                        class="flex h-full w-full items-center justify-center bg-gradient-to-br from-green-100 to-green-200">
+                                        <i class="fas fa-hand-holding-heart text-5xl text-green-400"
+                                            aria-hidden="true"></i>
+                                    </div>
+                                @endif
+                                @if ($campaign->category)
+                                    <span
+                                        class="absolute left-3 top-3 rounded-full bg-green-600/90 px-3 py-1 text-xs font-semibold text-white">
+                                        {{ $campaign->category->name }}
+                                    </span>
+                                @endif
+                            </div>
+                            <div class="flex flex-1 flex-col p-5">
+                                <h3
+                                    class="mb-2 line-clamp-2 text-lg font-bold text-gray-800 transition group-hover:text-green-700">
+                                    {{ $campaign->title }}
+                                </h3>
+                                @if ($campaign->description)
+                                    <p class="mb-4 line-clamp-2 text-sm text-gray-500">{{ $campaign->description }}</p>
+                                @endif
+                                <div class="mt-auto pt-2">
+                                    <x-quota-progress :booked="$campaign->collected_amount"
+                                        :total="$campaign->target_amount" :showLabel="false" />
+                                    <p class="mt-2 text-xs font-semibold text-green-700">
+                                        Terkumpul Rp {{ number_format($campaign->collected_amount, 0, ',', '.') }}
+                                        <span class="font-normal text-gray-400">dari Rp
+                                            {{ number_format($campaign->target_amount, 0, ',', '.') }}</span>
+                                    </p>
+                                </div>
+                            </div>
+                        </a>
+                    @endforeach
+                </div>
+
+                <div class="mt-10 text-center">
+                    <a href="{{ route('public.infaq.index') }}"
+                        class="inline-flex items-center gap-2 rounded-full bg-green-600 px-8 py-3 font-semibold text-white shadow-md transition hover:bg-green-700 hover:shadow-lg">
+                        <i class="fas fa-hand-holding-heart" aria-hidden="true"></i>
+                        <span>Lihat Semua Campaign &amp; Donasi</span>
+                    </a>
+                </div>
+            </div>
+        </section>
+    @endif
+
     <!-- ===== DONATION ===== -->
     <section id="donation" class="bg-gray-50 py-12 md:py-16">
         <div class="container mx-auto px-4">
