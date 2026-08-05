@@ -45,9 +45,7 @@ class QurbanController extends Controller
                 $query->whereNull('qurban_activity_id')
                     ->orWhereHas('activity', fn ($q) => $q->open());
             })
-            ->withCount(['orders as booked_slots_count' => function ($query) {
-                $query->where('payment_status', 'success');
-            }])
+            ->withBookingStats()
             ->orderBy('animal_type')
             ->paginate(9);
 
@@ -65,10 +63,14 @@ class QurbanController extends Controller
         // Load dokumentasi dengan relasi yang benar
         $sacrificialAnimal->load('documentations');
 
-        // Hitung jumlah pesanan sukses
-        $sacrificialAnimal->loadCount(['orders as booked_slots_count' => function ($query) {
-            $query->where('payment_status', 'success');
-        }]);
+        // Hitung slot terpakai & dana terkumpul (lihat SacrificialAnimal::scopeWithBookingStats)
+        $sacrificialAnimal->loadCount([
+            'orders as has_full_order_count' => fn ($query) => $query->where('payment_status', 'success')->where('order_type', 'full'),
+            'orders as patungan_slots_count' => fn ($query) => $query->where('payment_status', 'success')->where('order_type', 'patungan'),
+        ]);
+        $sacrificialAnimal->loadSum(['orders as success_amount' => fn ($query) => $query->where('payment_status', 'success')], 'total_amount');
+        $sacrificialAnimal->loadSum(['installments as in_progress_installment_amount' => fn ($query) => $query->where('qurban_installments.payment_status', 'success')
+            ->whereHas('order', fn ($oq) => $oq->where('qurban_orders.payment_status', 'pending'))], 'amount');
 
         return view('public.qurban.show', compact('sacrificialAnimal'));
     }
@@ -165,13 +167,6 @@ class QurbanController extends Controller
         // Load relasi animal beserta Qurban Activity-nya, dan user
         $qurbanOrder->load('animal.activity', 'user');
 
-        // Validasi 3: Pastikan hewan sudah disembelih (dengan pesan custom)
-        abort_unless(
-            $qurbanOrder->animal->status === 'slaughtered',
-            403,
-            'Sertifikat tersedia setelah hewan kurban selesai disembelih.'
-        );
-
         // Generate nomor sertifikat jika belum ada
         if (! $qurbanOrder->certificate_number) {
             $qurbanOrder->update([
@@ -203,10 +198,12 @@ class QurbanController extends Controller
         );
         $hijriYear = $hijriFormatter->format(($activity?->start_date ?? now())->getTimestamp());
 
-        // Latar belakang sertifikat (desain dari Canva), di-embed sebagai base64
-        $backgroundDataUri = 'data:image/png;base64,' . base64_encode(
-            file_get_contents(resource_path('certificate-assets/qurban-certificate-bg.png'))
-        );
+        // Latar belakang sertifikat: pakai yang diunggah admin untuk Qurban Activity ini (jika ada),
+        // kalau tidak pakai desain default (Canva), keduanya di-embed sebagai base64.
+        $backgroundDataUri = $this->imageToDataUri($activity?->certificate_background)
+            ?? 'data:image/png;base64,' . base64_encode(
+                file_get_contents(resource_path('certificate-assets/qurban-certificate-bg.png'))
+            );
 
         // Generate PDF sertifikat
         $pdf = Pdf::loadView('pdf.qurban-certificate', compact(

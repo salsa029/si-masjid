@@ -11,9 +11,7 @@ class QurbanDashboardController extends Controller
 {
     public function index(): View
     {
-        $animals = SacrificialAnimal::withCount(['orders as booked_slots_count' => function ($query) {
-            $query->where('payment_status', 'success');
-        }])
+        $animals = SacrificialAnimal::withBookingStats()
             ->orderBy('animal_type')
             ->get();
 

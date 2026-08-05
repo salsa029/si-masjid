@@ -83,9 +83,15 @@
                                 </p>
                             @endif
 
-                            <!-- Progress Bar -->
+                            <!-- Progress Dana Terkumpul -->
                             <div class="mt-3">
-                                <x-quota-progress :booked="$animal->booked_slots_count ?? 0" :total="$animal->max_participants" />
+                                <x-quota-progress :booked="$animal->collected_amount ?? 0" :total="$animal->price" :showLabel="false" />
+                                <p class="mt-1.5 text-xs font-semibold text-green-700">
+                                    Terkumpul Rp {{ number_format($animal->collected_amount ?? 0, 0, ',', '.') }}
+                                    <span class="font-normal text-gray-400">
+                                        · sisa Rp {{ number_format(max(0, $animal->price - ($animal->collected_amount ?? 0)), 0, ',', '.') }}
+                                    </span>
+                                </p>
                             </div>
                         </div>
                     </a>

@@ -95,9 +95,17 @@
                         </div>
                     </div>
 
-                    <!-- Progress -->
+                    <!-- Progress Dana Terkumpul -->
                     <div class="mt-6">
-                        <x-quota-progress :booked="$sacrificialAnimal->booked_slots_count ?? 0" :total="$sacrificialAnimal->max_participants" />
+                        <x-quota-progress :booked="$sacrificialAnimal->collected_amount ?? 0" :total="$sacrificialAnimal->price"
+                            :showLabel="false" />
+                        <p class="mt-1.5 text-sm font-semibold text-green-700">
+                            Terkumpul Rp {{ number_format($sacrificialAnimal->collected_amount ?? 0, 0, ',', '.') }}
+                            <span class="font-normal text-gray-400">
+                                dari Rp {{ number_format($sacrificialAnimal->price, 0, ',', '.') }}
+                                · sisa Rp {{ number_format(max(0, $sacrificialAnimal->price - ($sacrificialAnimal->collected_amount ?? 0)), 0, ',', '.') }}
+                            </span>
+                        </p>
                         @if ($sacrificialAnimal->max_participants > 1)
                             <p class="mt-1 text-xs text-gray-400">
                                 <i class="fas fa-users mr-1" aria-hidden="true"></i>

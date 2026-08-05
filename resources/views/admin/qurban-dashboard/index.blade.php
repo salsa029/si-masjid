@@ -43,6 +43,10 @@
                         <td class="px-5 py-3 capitalize text-gray-500">{{ $animal->animal_type }}</td>
                         <td class="w-64 px-5 py-3">
                             <x-quota-progress :booked="$animal->booked_slots_count" :total="$animal->max_participants" />
+                            <p class="mt-1 text-xs text-gray-400">
+                                Dana: Rp {{ number_format($animal->collected_amount, 0, ',', '.') }}
+                                / Rp {{ number_format($animal->price, 0, ',', '.') }}
+                            </p>
                         </td>
                         <td class="px-5 py-3">
                             @php
