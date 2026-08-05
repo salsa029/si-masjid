@@ -2,53 +2,46 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\ZakatTypeRequest;
 use App\Models\ZakatType;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
-class ZakatTypeController extends Controller
+class ZakatTypeController extends AbstractCategoryController
 {
     public function index(): View
     {
-        $zakatTypes = ZakatType::withCount('zakats')->latest()->paginate(10);
-
-        return view('admin.zakat-types.index', compact('zakatTypes'));
+        return $this->renderIndex(ZakatType::class, 'zakats', 'admin.zakat-types.index', 'zakatTypes');
     }
 
     public function create(): View
     {
-        return view('admin.zakat-types.create');
+        return $this->renderCreate('admin.zakat-types.create');
     }
 
     public function store(ZakatTypeRequest $request): RedirectResponse
     {
-        ZakatType::create($request->validated());
-
-        return redirect()->route('admin.zakat-types.index')->with('success', 'Jenis zakat berhasil ditambahkan.');
+        return $this->storeAndRedirect(ZakatType::class, $request->validated(), 'admin.zakat-types.index', 'Jenis zakat berhasil ditambahkan.');
     }
 
     public function edit(ZakatType $zakatType): View
     {
-        return view('admin.zakat-types.edit', compact('zakatType'));
+        return $this->renderEdit($zakatType, 'admin.zakat-types.edit', 'zakatType');
     }
 
     public function update(ZakatTypeRequest $request, ZakatType $zakatType): RedirectResponse
     {
-        $zakatType->update($request->validated());
-
-        return redirect()->route('admin.zakat-types.index')->with('success', 'Jenis zakat berhasil diperbarui.');
+        return $this->updateAndRedirect($zakatType, $request->validated(), 'admin.zakat-types.index', 'Jenis zakat berhasil diperbarui.');
     }
 
     public function destroy(ZakatType $zakatType): RedirectResponse
     {
-        if ($zakatType->zakats()->exists()) {
-            return redirect()->route('admin.zakat-types.index')->with('error', 'Jenis zakat tidak bisa dihapus karena masih memiliki riwayat transaksi.');
-        }
-
-        $zakatType->delete();
-
-        return redirect()->route('admin.zakat-types.index')->with('success', 'Jenis zakat berhasil dihapus.');
+        return $this->destroyWithGuard(
+            $zakatType,
+            'zakats',
+            'admin.zakat-types.index',
+            'Jenis zakat tidak bisa dihapus karena masih memiliki riwayat transaksi.',
+            'Jenis zakat berhasil dihapus.'
+        );
     }
 }

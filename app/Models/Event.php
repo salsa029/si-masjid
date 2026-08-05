@@ -31,11 +31,14 @@ class Event extends Model
         'views_count',
     ];
 
-    protected $casts = [
-        'start_at' => 'datetime',
-        'end_at' => 'datetime',
-        'is_featured' => 'boolean',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'start_at' => 'datetime',
+            'end_at' => 'datetime',
+            'is_featured' => 'boolean',
+        ];
+    }
 
     public function category()
     {

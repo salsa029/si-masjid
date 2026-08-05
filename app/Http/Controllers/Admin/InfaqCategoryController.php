@@ -2,55 +2,46 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\InfaqCategoryRequest;
 use App\Models\InfaqCategory;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
-class InfaqCategoryController extends Controller
+class InfaqCategoryController extends AbstractCategoryController
 {
     public function index(): View
     {
-        $infaqCategories = InfaqCategory::withCount('infaqs')->latest()->paginate(10);
-
-        return view('admin.infaq-categories.index', compact('infaqCategories'));
+        return $this->renderIndex(InfaqCategory::class, 'infaqs', 'admin.infaq-categories.index', 'infaqCategories');
     }
 
     public function create(): View
     {
-        return view('admin.infaq-categories.create');
+        return $this->renderCreate('admin.infaq-categories.create');
     }
 
     public function store(InfaqCategoryRequest $request): RedirectResponse
     {
-        InfaqCategory::create($request->validated());
-
-        return redirect()->route('admin.infaq-categories.index')->with('success', 'Kategori infaq berhasil ditambahkan.');
+        return $this->storeAndRedirect(InfaqCategory::class, $request->validated(), 'admin.infaq-categories.index', 'Kategori infaq berhasil ditambahkan.');
     }
 
     public function edit(InfaqCategory $infaqCategory): View
     {
-        return view('admin.infaq-categories.edit', compact('infaqCategory'));
+        return $this->renderEdit($infaqCategory, 'admin.infaq-categories.edit', 'infaqCategory');
     }
 
     public function update(InfaqCategoryRequest $request, InfaqCategory $infaqCategory): RedirectResponse
     {
-        $infaqCategory->update($request->validated());
-
-        return redirect()->route('admin.infaq-categories.index')->with('success', 'Kategori infaq berhasil diperbarui.');
+        return $this->updateAndRedirect($infaqCategory, $request->validated(), 'admin.infaq-categories.index', 'Kategori infaq berhasil diperbarui.');
     }
 
     public function destroy(InfaqCategory $infaqCategory): RedirectResponse
     {
-        if ($infaqCategory->infaqs()->exists()) {
-            return redirect()
-                ->route('admin.infaq-categories.index')
-                ->with('error', 'Kategori tidak bisa dihapus karena masih dipakai oleh transaksi infaq.');
-        }
-
-        $infaqCategory->delete();
-
-        return redirect()->route('admin.infaq-categories.index')->with('success', 'Kategori infaq berhasil dihapus.');
+        return $this->destroyWithGuard(
+            $infaqCategory,
+            'infaqs',
+            'admin.infaq-categories.index',
+            'Kategori tidak bisa dihapus karena masih dipakai oleh transaksi infaq.',
+            'Kategori infaq berhasil dihapus.'
+        );
     }
 }

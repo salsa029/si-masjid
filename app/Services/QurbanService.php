@@ -5,10 +5,13 @@ namespace App\Services;
 use App\Models\QurbanInvoiceCounter;
 use App\Models\QurbanOrder;
 use App\Models\SacrificialAnimal;
+use App\Traits\GeneratesSequentialNumbers;
 use Illuminate\Support\Facades\DB;
 
 class QurbanService
 {
+    use GeneratesSequentialNumbers;
+
     /**
      * Menandai sebuah pesanan kurban sebagai berhasil dibayar.
      * Dipanggil dari Webhook Midtrans (otomatis) MAUPUN Admin Verifikasi (manual transfer).
@@ -81,30 +84,11 @@ class QurbanService
 
     public function generateInvoiceNumber(): string
     {
-        return $this->generateSequentialNumber('invoice', 'KRB');
+        return $this->generateSequentialNumber(QurbanInvoiceCounter::class, 'invoice', 'KRB');
     }
 
     public function generateCertificateNumber(): string
     {
-        return $this->generateSequentialNumber('certificate', 'SRT');
-    }
-
-    private function generateSequentialNumber(string $type, string $prefix): string
-    {
-        return DB::transaction(function () use ($type, $prefix) {
-            $year = now()->year;
-
-            $counter = QurbanInvoiceCounter::where('type', $type)->where('year', $year)->lockForUpdate()->first();
-
-            if (! $counter) {
-                $counter = QurbanInvoiceCounter::create(['type' => $type, 'year' => $year, 'last_number' => 0]);
-                $counter = QurbanInvoiceCounter::where('id', $counter->id)->lockForUpdate()->first();
-            }
-
-            $nextNumber = $counter->last_number + 1;
-            $counter->update(['last_number' => $nextNumber]);
-
-            return sprintf('%s-%d-%05d', $prefix, $year, $nextNumber);
-        });
+        return $this->generateSequentialNumber(QurbanInvoiceCounter::class, 'certificate', 'SRT');
     }
 }

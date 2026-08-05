@@ -10,7 +10,10 @@ class TransactionStatusHistory extends Model
 
     protected $fillable = ['from_status', 'to_status', 'note', 'changed_by'];
 
-    protected $casts = ['created_at' => 'datetime'];
+    protected function casts(): array
+    {
+        return ['created_at' => 'datetime'];
+    }
 
     public function transactionable()
     {

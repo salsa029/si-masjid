@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Infaq;
 use App\Models\Zakat;
 use App\Services\DonationService;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -19,120 +20,89 @@ class DonationVerificationController extends Controller
 
     public function infaqIndex(): View
     {
-        $items = Infaq::with(['user', 'category', 'campaign'])
-            ->where('payment_method', 'manual_transfer')
-            ->where('payment_status', 'awaiting_verification')
-            ->latest()
-            ->paginate(10);
-
-        return view('admin.donation-verifications.infaq-index', compact('items'));
+        return $this->renderIndex(Infaq::class, ['user', 'category', 'campaign'], 'admin.donation-verifications.infaq-index');
     }
 
     public function infaqShow(Infaq $infaq): View
     {
-        abort_unless($infaq->payment_method === 'manual_transfer', 404);
-        abort_unless($infaq->payment_status === 'awaiting_verification', 404);
-
-        $infaq->load(['user', 'category', 'campaign']);
-
-        return view('admin.donation-verifications.infaq-show', compact('infaq'));
+        return $this->renderShow($infaq, ['user', 'category', 'campaign'], 'admin.donation-verifications.infaq-show', 'infaq');
     }
 
     public function infaqApprove(Infaq $infaq): RedirectResponse
     {
-        abort_unless($infaq->payment_method === 'manual_transfer', 400);
-        abort_unless($infaq->payment_status === 'awaiting_verification', 400);
-
-        $this->donationService->markAsSuccess($infaq, 'manual_transfer', Auth::id());
-
-        activity('infaq')
-            ->causedBy(Auth::user())
-            ->performedOn($infaq)
-            ->withProperties(['ip_address' => request()->ip()])
-            ->log('Memverifikasi (menyetujui) pembayaran infaq #' . $infaq->id);
-
-        return redirect()
-            ->route('admin.donation-verifications.infaq.index')
-            ->with('success', 'Infaq berhasil diverifikasi.');
+        return $this->approve($infaq, 'infaq', 'admin.donation-verifications.infaq.index', 'Infaq berhasil diverifikasi.');
     }
 
     public function infaqReject(Request $request, Infaq $infaq): RedirectResponse
     {
-        abort_unless($infaq->payment_method === 'manual_transfer', 400);
-        abort_unless($infaq->payment_status === 'awaiting_verification', 400);
-
-        $request->validate([
-            'verification_note' => ['required', 'string', 'max:500'],
-        ], [
-            'verification_note.required' => 'Alasan penolakan wajib diisi.',
-        ]);
-
-        $infaq->update([
-            'payment_status' => 'failed',
-            'verification_note' => $request->input('verification_note'),
-            'verified_by' => Auth::id(),
-            'verified_at' => now(),
-        ]);
-
-        activity('infaq')
-            ->causedBy(Auth::user())
-            ->performedOn($infaq)
-            ->withProperties([
-                'ip_address' => request()->ip(),
-                'reason' => $request->input('verification_note'),
-            ])
-            ->log('Menolak verifikasi pembayaran infaq #' . $infaq->id . ' dengan alasan: ' . $request->input('verification_note'));
-
-        return redirect()
-            ->route('admin.donation-verifications.infaq.index')
-            ->with('success', 'Infaq ditolak.');
+        return $this->reject($request, $infaq, 'infaq', 'admin.donation-verifications.infaq.index', 'Infaq ditolak.');
     }
 
     // --- SEKSI ZAKAT ---
 
     public function zakatIndex(): View
     {
-        $items = Zakat::with(['user', 'zakatType'])
+        return $this->renderIndex(Zakat::class, ['user', 'zakatType'], 'admin.donation-verifications.zakat-index');
+    }
+
+    public function zakatShow(Zakat $zakat): View
+    {
+        return $this->renderShow($zakat, ['user', 'zakatType'], 'admin.donation-verifications.zakat-show', 'zakat');
+    }
+
+    public function zakatApprove(Zakat $zakat): RedirectResponse
+    {
+        return $this->approve($zakat, 'zakat', 'admin.donation-verifications.zakat.index', 'Zakat berhasil diverifikasi.');
+    }
+
+    public function zakatReject(Request $request, Zakat $zakat): RedirectResponse
+    {
+        return $this->reject($request, $zakat, 'zakat', 'admin.donation-verifications.zakat.index', 'Zakat ditolak.');
+    }
+
+    // --- LOGIKA BERSAMA ---
+
+    private function renderIndex(string $modelClass, array $with, string $view): View
+    {
+        $items = $modelClass::with($with)
             ->where('payment_method', 'manual_transfer')
             ->where('payment_status', 'awaiting_verification')
             ->latest()
             ->paginate(10);
 
-        return view('admin.donation-verifications.zakat-index', compact('items'));
+        return view($view, compact('items'));
     }
 
-    public function zakatShow(Zakat $zakat): View
+    private function renderShow(Model $transaction, array $with, string $view, string $variable): View
     {
-        abort_unless($zakat->payment_method === 'manual_transfer', 404);
-        abort_unless($zakat->payment_status === 'awaiting_verification', 404);
+        abort_unless($transaction->payment_method === 'manual_transfer', 404);
+        abort_unless($transaction->payment_status === 'awaiting_verification', 404);
 
-        $zakat->load(['user', 'zakatType']);
+        $transaction->load($with);
 
-        return view('admin.donation-verifications.zakat-show', compact('zakat'));
+        return view($view, [$variable => $transaction]);
     }
 
-    public function zakatApprove(Zakat $zakat): RedirectResponse
+    private function approve(Model $transaction, string $logName, string $routeIndex, string $successMessage): RedirectResponse
     {
-        abort_unless($zakat->payment_method === 'manual_transfer', 400);
-        abort_unless($zakat->payment_status === 'awaiting_verification', 400);
+        abort_unless($transaction->payment_method === 'manual_transfer', 400);
+        abort_unless($transaction->payment_status === 'awaiting_verification', 400);
 
-        $this->donationService->markAsSuccess($zakat, 'manual_transfer', Auth::id());
+        $this->donationService->markAsSuccess($transaction, 'manual_transfer', Auth::id());
 
-        activity('zakat')
+        activity($logName)
             ->causedBy(Auth::user())
-            ->performedOn($zakat)
+            ->performedOn($transaction)
             ->withProperties(['ip_address' => request()->ip()])
-            ->log('Memverifikasi (menyetujui) pembayaran zakat #' . $zakat->id);
+            ->log("Memverifikasi (menyetujui) pembayaran {$logName} #{$transaction->id}");
 
-        return redirect()
-            ->route('admin.donation-verifications.zakat.index')
-            ->with('success', 'Zakat berhasil diverifikasi.');
+        return redirect()->route($routeIndex)->with('success', $successMessage);
     }
 
-    public function zakatReject(Request $request, Zakat $zakat): RedirectResponse
+    private function reject(Request $request, Model $transaction, string $logName, string $routeIndex, string $successMessage): RedirectResponse
     {
-        abort_unless($zakat->payment_method === 'manual_transfer', 400);
-        abort_unless($zakat->payment_status === 'awaiting_verification', 400);
+        abort_unless($transaction->payment_method === 'manual_transfer', 400);
+        abort_unless($transaction->payment_status === 'awaiting_verification', 400);
 
         $request->validate([
             'verification_note' => ['required', 'string', 'max:500'],
@@ -140,24 +110,22 @@ class DonationVerificationController extends Controller
             'verification_note.required' => 'Alasan penolakan wajib diisi.',
         ]);
 
-        $zakat->update([
+        $transaction->update([
             'payment_status' => 'failed',
             'verification_note' => $request->input('verification_note'),
             'verified_by' => Auth::id(),
             'verified_at' => now(),
         ]);
 
-        activity('zakat')
+        activity($logName)
             ->causedBy(Auth::user())
-            ->performedOn($zakat)
+            ->performedOn($transaction)
             ->withProperties([
                 'ip_address' => request()->ip(),
                 'reason' => $request->input('verification_note'),
             ])
-            ->log('Menolak verifikasi pembayaran zakat #' . $zakat->id . ' dengan alasan: ' . $request->input('verification_note'));
+            ->log("Menolak verifikasi pembayaran {$logName} #{$transaction->id} dengan alasan: " . $request->input('verification_note'));
 
-        return redirect()
-            ->route('admin.donation-verifications.zakat.index')
-            ->with('success', 'Zakat ditolak.');
+        return redirect()->route($routeIndex)->with('success', $successMessage);
     }
 }

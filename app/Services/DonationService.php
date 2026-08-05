@@ -4,12 +4,14 @@ namespace App\Services;
 
 use App\Models\Infaq;
 use App\Models\TransactionCounter;
-use App\Models\Zakat;
+use App\Traits\GeneratesSequentialNumbers;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 
 class DonationService
 {
+    use GeneratesSequentialNumbers;
+
     /**
      * Menandai sebuah transaksi (Infaq ATAU Zakat) sebagai berhasil dibayar.
      * Dipanggil dari Webhook Midtrans MAUPUN Admin Verifikasi transfer manual.
@@ -40,21 +42,7 @@ class DonationService
         $type = $transaction instanceof Infaq ? 'infaq' : 'zakat';
         $prefix = $transaction instanceof Infaq ? 'INF' : 'ZKT';
 
-        return DB::transaction(function () use ($type, $prefix) {
-            $year = now()->year;
-
-            $counter = TransactionCounter::where('type', $type)->where('year', $year)->lockForUpdate()->first();
-
-            if (! $counter) {
-                $counter = TransactionCounter::create(['type' => $type, 'year' => $year, 'last_number' => 0]);
-                $counter = TransactionCounter::where('id', $counter->id)->lockForUpdate()->first();
-            }
-
-            $nextNumber = $counter->last_number + 1;
-            $counter->update(['last_number' => $nextNumber]);
-
-            return sprintf('%s-%d-%05d', $prefix, $year, $nextNumber);
-        });
+        return $this->generateSequentialNumber(TransactionCounter::class, $type, $prefix);
     }
 
     /**

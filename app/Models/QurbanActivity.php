@@ -25,10 +25,13 @@ class QurbanActivity extends Model
         'qurban_chairman_photo',
     ];
 
-    protected $casts = [
-        'start_date' => 'date',
-        'end_date' => 'date',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'start_date' => 'date',
+            'end_date' => 'date',
+        ];
+    }
 
     public function animals(): HasMany
     {

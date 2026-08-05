@@ -33,13 +33,16 @@ class Infaq extends Model
         'paid_at',
     ];
 
-    protected $casts = [
-        'is_anonymous' => 'boolean',
-        'paid_at' => 'datetime',
-        'verified_at' => 'datetime',
-        'reserved_until' => 'datetime',
-        'snap_token_expires_at' => 'datetime',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'is_anonymous' => 'boolean',
+            'paid_at' => 'datetime',
+            'verified_at' => 'datetime',
+            'reserved_until' => 'datetime',
+            'snap_token_expires_at' => 'datetime',
+        ];
+    }
 
     public function user()
     {
