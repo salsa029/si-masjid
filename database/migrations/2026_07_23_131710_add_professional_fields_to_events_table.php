@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
@@ -29,10 +30,14 @@ return new class extends Migration
             $table->unsignedInteger('views_count')->default(0)->after('is_featured');
         });
 
-        // Langkah 3: Backfill "end_at" — asumsikan kegiatan lama berlangsung 2 jam
-        DB::table('events')->whereNull('end_at')->update([
-            'end_at' => DB::raw('DATE_ADD(start_at, INTERVAL 2 HOUR)'),
-        ]);
+        // Langkah 3: Backfill "end_at" — asumsikan kegiatan lama berlangsung 2 jam.
+        // Dihitung di PHP (bukan DATE_ADD SQL) supaya migration ini tetap
+        // jalan di semua driver database, termasuk SQLite saat testing.
+        foreach (DB::table('events')->whereNull('end_at')->get() as $event) {
+            DB::table('events')->where('id', $event->id)->update([
+                'end_at' => Carbon::parse($event->start_at)->addHours(2),
+            ]);
+        }
 
         // Langkah 4: Backfill "slug" dari judul kegiatan yang sudah ada
         foreach (DB::table('events')->whereNull('slug')->get() as $event) {
