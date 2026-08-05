@@ -32,7 +32,13 @@ class InfaqController extends Controller
     public function index(): View
     {
         $categories = InfaqCategory::orderBy('name')->get();
-        $activeCampaigns = InfaqCampaign::where('status', 'active')->latest()->take(6)->get();
+        $activeCampaigns = InfaqCampaign::where('status', 'active')
+            ->withSum(['infaqs as collected_amount' => function ($query) {
+                $query->where('payment_status', 'success');
+            }], 'amount')
+            ->latest()
+            ->take(6)
+            ->get();
         $settings = DonationSetting::firstOrNew();
 
         return view('public.infaq.index', compact('categories', 'activeCampaigns', 'settings'));

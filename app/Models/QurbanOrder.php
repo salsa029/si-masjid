@@ -2,12 +2,16 @@
 
 namespace App\Models;
 
+use App\Traits\HasPaymentWorkflow;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class QurbanOrder extends Model
 {
+    use SoftDeletes, HasPaymentWorkflow;
+
     protected $fillable = [
         'user_id',
         'sacrificial_animal_id',
@@ -29,12 +33,15 @@ class QurbanOrder extends Model
         'paid_at',
     ];
 
-    protected $casts = [
-        'paid_at' => 'datetime',
-        'verified_at' => 'datetime',
-        'reserved_until' => 'datetime',
-        'snap_token_expires_at' => 'datetime',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'paid_at' => 'datetime',
+            'verified_at' => 'datetime',
+            'reserved_until' => 'datetime',
+            'snap_token_expires_at' => 'datetime',
+        ];
+    }
 
     public function user(): BelongsTo
     {
@@ -44,11 +51,6 @@ class QurbanOrder extends Model
     public function animal(): BelongsTo
     {
         return $this->belongsTo(SacrificialAnimal::class, 'sacrificial_animal_id');
-    }
-
-    public function verifier(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'verified_by');
     }
 
     public function participants(): HasMany

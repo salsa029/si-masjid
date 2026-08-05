@@ -17,7 +17,12 @@ class InfaqCampaignController extends Controller
 
     public function index(): View
     {
-        $campaigns = InfaqCampaign::with('category')->latest()->paginate(10);
+        $campaigns = InfaqCampaign::with('category')
+            ->withSum(['infaqs as collected_amount' => function ($query) {
+                $query->where('payment_status', 'success');
+            }], 'amount')
+            ->latest()
+            ->paginate(10);
 
         return view('admin.infaq-campaigns.index', compact('campaigns'));
     }

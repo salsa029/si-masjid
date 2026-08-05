@@ -22,8 +22,6 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Registrasi Alias Middleware
         $middleware->alias([
-            'admin' => \App\Http\Middleware\EnsureUserIsAdmin::class,
-
             // Middleware Spatie Permission
             'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,

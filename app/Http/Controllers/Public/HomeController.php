@@ -52,6 +52,9 @@ class HomeController extends Controller
             ->orderBy('start_at')
             ->first();
 
+        // Galeri kegiatan: semua kegiatan yang sudah dipublikasikan, terbaru dulu (beda dari $latestEvents yang hanya upcoming)
+        $galleryEvents = Event::published()->latest()->take(6)->get();
+
         $donationSettings = DonationSetting::firstOrNew();
 
         // Campaign infaq yang sedang berjalan, ditampilkan di Beranda
@@ -59,6 +62,9 @@ class HomeController extends Controller
             ->where(function ($query) {
                 $query->whereNull('end_date')->orWhere('end_date', '>=', now()->toDateString());
             })
+            ->withSum(['infaqs as collected_amount' => function ($query) {
+                $query->where('payment_status', 'success');
+            }], 'amount')
             ->latest('start_date')
             ->take(3)
             ->get();
@@ -98,6 +104,7 @@ class HomeController extends Controller
             'latestArticles',
             'latestEvents',
             'featuredEvent',
+            'galleryEvents',
             'donationSettings',
             'activeCampaigns',
             'activeCommitteeCount',

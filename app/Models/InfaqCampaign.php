@@ -24,10 +24,13 @@ class InfaqCampaign extends Model
         'status',
     ];
 
-    protected $casts = [
-        'start_date' => 'date',
-        'end_date' => 'date',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'start_date' => 'date',
+            'end_date' => 'date',
+        ];
+    }
 
     protected static function booted(): void
     {
@@ -48,7 +51,13 @@ class InfaqCampaign extends Model
 
     public function getCollectedAmountAttribute(): float
     {
-        return $this->infaqs()->where('payment_status', 'success')->sum('amount');
+        // Pakai hasil withSum('infaqs as collected_amount') kalau sudah di-eager-load,
+        // supaya tidak query ulang per baris (N+1) saat menampilkan daftar campaign.
+        if (array_key_exists('collected_amount', $this->attributes)) {
+            return (float) $this->attributes['collected_amount'];
+        }
+
+        return (float) $this->infaqs()->where('payment_status', 'success')->sum('amount');
     }
 
     public function getProgressPercentageAttribute(): int

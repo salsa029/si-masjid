@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Infaq;
 use App\Models\Zakat;
 use App\Models\QurbanOrder;
-use App\Models\SacrificialAnimal;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -108,25 +107,5 @@ class WebhookController extends Controller
         }
 
         $qurbanOrder->update(['payment_status' => $paymentStatus]);
-    }
-
-    /**
-     * Memeriksa kuota hewan kurban (digunakan di dalam QurbanService).
-     */
-    private function updateAnimalStatusIfFullyBooked(int $sacrificialAnimalId): void
-    {
-        $animal = SacrificialAnimal::find($sacrificialAnimalId);
-
-        if (!$animal) {
-            return;
-        }
-
-        $successfulSlots = QurbanOrder::where('sacrificial_animal_id', $animal->id)
-            ->where('payment_status', 'success')
-            ->count();
-
-        if ($successfulSlots >= $animal->max_participants) {
-            $animal->update(['status' => 'fully_booked']);
-        }
     }
 }

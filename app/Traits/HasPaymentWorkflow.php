@@ -15,12 +15,13 @@ use Illuminate\Support\Facades\Auth;
 trait HasPaymentWorkflow
 {
     /**
-     * Diinisialisasi otomatis oleh Laravel saat Model dibuat (instance level).
-     * Menggunakan ini menghindari 'static' context yang membuat IDE bingung.
+     * Didaftarkan otomatis oleh Laravel sekali per class model (class level), bukan
+     * per instance — supaya listener 'updating' tidak menumpuk/terdaftar berkali-kali
+     * setiap kali model di-instantiate ulang dalam satu request.
      */
-    public function initializeHasPaymentWorkflow(): void
+    public static function bootHasPaymentWorkflow(): void
     {
-        $this->updating(function ($model) {
+        static::updating(function ($model) {
             if ($model->isDirty('payment_status')) {
                 $model->statusHistories()->create([
                     'from_status' => $model->getOriginal('payment_status'),

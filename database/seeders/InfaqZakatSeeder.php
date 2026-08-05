@@ -36,7 +36,7 @@ class InfaqZakatSeeder extends Seeder
         }
 
         $campaign = InfaqCampaign::create([
-            'infaq_category_id' => $infaqCategory->id,
+            'category_id' => $infaqCategory->id,
             'title' => 'Renovasi Lantai 2 Masjid Al-Ikhlas',
             'slug' => 'renovasi-lantai-2-masjid-al-ikhlas',
             'description' => 'Penggalangan dana untuk perluasan lantai 2 masjid guna menampung jamaah yang terus bertambah, khususnya saat sholat Jumat dan Tarawih.',
@@ -86,7 +86,7 @@ class InfaqZakatSeeder extends Seeder
 
             Infaq::create([
                 'user_id' => $jamaahUsers->random()->id,
-                'infaq_campaign_id' => rand(0, 1) ? $campaign->id : null,
+                'campaign_id' => rand(0, 1) ? $campaign->id : null,
                 'amount' => fake()->randomElement([20000, 50000, 100000, 250000, 500000, 1000000, 2000000]),
                 'is_anonymous' => $isAnonymous,
                 'donor_name' => $isAnonymous ? 'Hamba Allah' : null,

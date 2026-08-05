@@ -4,11 +4,8 @@
 
 @section('content')
     @php
-        $mosque = \App\Models\MosqueProfile::first();
-        // Gunakan PrayerTimeService untuk mendapatkan data jadwal sholat
-        use App\Services\PrayerTimeService;
-        $prayerService = app(PrayerTimeService::class);
-        $prayerData = $prayerService->getPrayerData();
+        // $mosqueProfile dan $prayerData sudah disiapkan oleh HomeController (termasuk city_code masjid)
+        $mosque = $mosqueProfile;
     @endphp
 
     <!-- ===== HERO SECTION ===== -->
@@ -448,7 +445,7 @@
             </div>
 
             <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                @forelse(\App\Models\Event::where('status', 'published')->latest()->take(6)->get() as $event)
+                @forelse($galleryEvents as $event)
                     <div class="card-hover group relative overflow-hidden rounded-xl shadow-md">
                         <a href="{{ route('public.events.show', $event->slug) }}" class="absolute inset-0 z-10"
                             aria-label="Lihat detail kegiatan {{ $event->title }}"></a>
@@ -498,7 +495,7 @@
             </div>
 
             <div class="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
-                @forelse(\App\Models\Article::where('status', 'published')->latest('published_at')->take(3)->get() as $article)
+                @forelse($latestArticles as $article)
                     <article class="card-hover flex flex-col overflow-hidden rounded-2xl bg-white shadow-md">
                         <a href="{{ route('public.articles.show', $article->slug) }}" class="block overflow-hidden">
                             @if ($article->thumbnail)

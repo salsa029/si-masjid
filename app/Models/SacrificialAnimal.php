@@ -56,6 +56,12 @@ class SacrificialAnimal extends Model
 
     public function getBookedSlotsCountAttribute(): int
     {
+        // Pakai hasil withCount('orders as booked_slots_count') kalau sudah di-eager-load,
+        // supaya tidak query ulang per baris (N+1) saat menampilkan daftar hewan kurban.
+        if (array_key_exists('booked_slots_count', $this->attributes)) {
+            return (int) $this->attributes['booked_slots_count'];
+        }
+
         return $this->orders()->where('payment_status', 'success')->count();
     }
 
