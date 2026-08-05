@@ -40,32 +40,25 @@
             position: absolute;
         }
 
+        /* top/left/font-size elemen .year, .recipient-name, .animal-type diatur lewat inline style
+           di bawah, dari pengaturan sertifikat per Qurban Activity (bisa diubah admin). */
         .year {
-            top: 55mm;
-            left: 166mm;
             width: 38mm;
-            font-size: 30px;
             font-weight: bold;
             color: #1e3a5f;
             text-align: center;
         }
 
         .recipient-name {
-            top: 87mm;
-            left: 53mm;
             width: 190mm;
             text-align: center;
-            font-size: 36px;
             font-weight: bold;
             color: #1e3a5f;
         }
 
         .animal-type {
-            top: 110mm;
-            left: 179mm;
             width: 70mm;
             text-align: left;
-            font-size: 21px;
             font-weight: bold;
             color: #1e3a5f;
         }
@@ -83,11 +76,8 @@
         }
 
         .dkm-name {
-            top: 165.5mm;
-            left: 50mm;
             width: 60mm;
             text-align: center;
-            font-size: 20px;
             font-weight: bold;
             color: #1e3a5f;
             white-space: nowrap;
@@ -106,11 +96,8 @@
         }
 
         .panitia-name {
-            top: 165.5mm;
-            left: 188mm;
             width: 60mm;
             text-align: center;
-            font-size: 20px;
             font-weight: bold;
             color: #1e3a5f;
             white-space: nowrap;
@@ -150,25 +137,39 @@
 
 <body>
 
+    @php
+        $certificateActivity = $qurbanOrder->animal->activity;
+    @endphp
+
     <div class="page">
         <img class="bg" src="{{ $backgroundDataUri }}" alt="Sertifikat Qurban">
 
-        <div class="overlay year">{{ $hijriYear }}</div>
+        <div class="overlay year"
+            style="top: {{ $certificateActivity->certificate_year_top ?? 55 }}mm; left: {{ $certificateActivity->certificate_year_left ?? 166 }}mm; font-size: {{ $certificateActivity->certificate_year_font_size ?? 30 }}px;">
+            {{ $hijriYear }}</div>
 
-        <div class="overlay recipient-name">{{ $qurbanOrder->user->name }}</div>
+        <div class="overlay recipient-name"
+            style="top: {{ $certificateActivity->certificate_name_top ?? 87 }}mm; left: {{ $certificateActivity->certificate_name_left ?? 53 }}mm; font-size: {{ $certificateActivity->certificate_name_font_size ?? 36 }}px;">
+            {{ $qurbanOrder->user->name }}</div>
 
-        <div class="overlay animal-type">{{ ucfirst($qurbanOrder->animal->animal_type) }}</div>
+        <div class="overlay animal-type"
+            style="top: {{ $certificateActivity->certificate_animal_top ?? 110 }}mm; left: {{ $certificateActivity->certificate_animal_left ?? 179 }}mm; font-size: {{ $certificateActivity->certificate_animal_font_size ?? 21 }}px;">
+            {{ ucfirst($qurbanOrder->animal->animal_type) }}</div>
 
         @if ($dkmSignatureDataUri)
             <div class="overlay dkm-signature-img"><img src="{{ $dkmSignatureDataUri }}" alt="TTD Ketua DKM"></div>
         @endif
-        <div class="overlay dkm-name">{{ $qurbanOrder->animal->activity?->dkm_chairman_name ?? '' }}</div>
+        <div class="overlay dkm-name"
+            style="top: {{ $certificateActivity->certificate_dkm_name_top ?? 165.5 }}mm; left: {{ $certificateActivity->certificate_dkm_name_left ?? 50 }}mm; font-size: {{ $certificateActivity->certificate_dkm_name_font_size ?? 20 }}px;">
+            {{ $certificateActivity?->dkm_chairman_name ?? '' }}</div>
 
         @if ($qurbanChairmanPhotoDataUri)
             <div class="overlay panitia-signature-img"><img src="{{ $qurbanChairmanPhotoDataUri }}"
                     alt="TTD Ketua Panitia"></div>
         @endif
-        <div class="overlay panitia-name">{{ $qurbanOrder->animal->activity?->qurban_chairman_name ?? '' }}</div>
+        <div class="overlay panitia-name"
+            style="top: {{ $certificateActivity->certificate_panitia_name_top ?? 165.5 }}mm; left: {{ $certificateActivity->certificate_panitia_name_left ?? 188 }}mm; font-size: {{ $certificateActivity->certificate_panitia_name_font_size ?? 20 }}px;">
+            {{ $certificateActivity?->qurban_chairman_name ?? '' }}</div>
 
         @if ($qrCodeDataUri)
             <div class="overlay qr"><img src="{{ $qrCodeDataUri }}" alt="QR Verifikasi"></div>

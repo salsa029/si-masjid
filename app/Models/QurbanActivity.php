@@ -23,6 +23,22 @@ class QurbanActivity extends Model
         'dkm_chairman_signature',
         'qurban_chairman_name',
         'qurban_chairman_photo',
+        'certificate_background',
+        'certificate_name_top',
+        'certificate_name_left',
+        'certificate_name_font_size',
+        'certificate_year_top',
+        'certificate_year_left',
+        'certificate_year_font_size',
+        'certificate_animal_top',
+        'certificate_animal_left',
+        'certificate_animal_font_size',
+        'certificate_dkm_name_top',
+        'certificate_dkm_name_left',
+        'certificate_dkm_name_font_size',
+        'certificate_panitia_name_top',
+        'certificate_panitia_name_left',
+        'certificate_panitia_name_font_size',
     ];
 
     protected function casts(): array
@@ -30,6 +46,16 @@ class QurbanActivity extends Model
         return [
             'start_date' => 'date',
             'end_date' => 'date',
+            'certificate_name_top' => 'float',
+            'certificate_name_left' => 'float',
+            'certificate_year_top' => 'float',
+            'certificate_year_left' => 'float',
+            'certificate_animal_top' => 'float',
+            'certificate_animal_left' => 'float',
+            'certificate_dkm_name_top' => 'float',
+            'certificate_dkm_name_left' => 'float',
+            'certificate_panitia_name_top' => 'float',
+            'certificate_panitia_name_left' => 'float',
         ];
     }
 

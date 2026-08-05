@@ -47,6 +47,14 @@ class QurbanActivityController extends Controller
             );
         }
 
+        if ($request->hasFile('certificate_background')) {
+            $validated['certificate_background'] = $this->imageUploadService->upload(
+                $request->file('certificate_background'),
+                folder: 'qurban-activities',
+                maxWidth: 2000
+            );
+        }
+
         QurbanActivity::create($validated);
 
         return redirect()
@@ -81,6 +89,15 @@ class QurbanActivityController extends Controller
             );
         }
 
+        if ($request->hasFile('certificate_background')) {
+            $validated['certificate_background'] = $this->imageUploadService->upload(
+                $request->file('certificate_background'),
+                folder: 'qurban-activities',
+                maxWidth: 2000,
+                oldPath: $qurbanActivity->certificate_background,
+            );
+        }
+
         $qurbanActivity->update($validated);
 
         return redirect()
@@ -98,6 +115,7 @@ class QurbanActivityController extends Controller
 
         $this->imageUploadService->delete($qurbanActivity->dkm_chairman_signature);
         $this->imageUploadService->delete($qurbanActivity->qurban_chairman_photo);
+        $this->imageUploadService->delete($qurbanActivity->certificate_background);
         $qurbanActivity->delete();
 
         return redirect()
