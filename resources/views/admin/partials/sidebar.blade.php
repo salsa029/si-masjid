@@ -305,7 +305,19 @@
     </div>
 </div>
 
-<!-- ===================== 6. Laporan ===================== -->
+<!-- ===================== 6. Kelola User ===================== -->
+<a href="{{ route('admin.users.index') }}" aria-label="Kelola User"
+    class="sidebar-item sb-tooltip-wrap {{ request()->routeIs('admin.users.*') ? 'active' : 'text-emerald-100' }} relative flex items-center gap-3 rounded-xl px-3 py-3"
+    :class="collapsed ? 'lg:justify-center' : ''">
+    <i class="fas fa-users-gear w-5 flex-shrink-0 text-center" aria-hidden="true"></i>
+    <span :class="collapsed ? 'lg:hidden' : ''">Kelola User</span>
+    <span
+        class="sb-tooltip pointer-events-none absolute left-full top-1/2 z-50 ml-3 hidden -translate-y-1/2 whitespace-nowrap rounded-lg bg-emerald-950 px-3 py-1.5 text-xs text-white shadow-xl lg:block">Kelola User</span>
+</a>
+
+<div class="my-2 border-t border-emerald-800/60" :class="collapsed ? 'lg:mx-2' : 'mx-1'"></div>
+
+<!-- ===================== 7. Laporan ===================== -->
 <div class="sb-tooltip-wrap relative" x-data="{ open: {{ request()->routeIs('admin.reports.*') || request()->routeIs('admin.audit-trail.*') ? 'true' : 'false' }} }">
     <button type="button" @click="open = !open" aria-label="Menu Laporan" :aria-expanded="open"
         class="sidebar-item {{ request()->routeIs('admin.reports.*') || request()->routeIs('admin.audit-trail.*') ? 'active' : 'text-emerald-100' }} flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left"

@@ -7,6 +7,7 @@ use App\Http\Requests\Admin\MosqueProfileRequest;
 use App\Models\MosqueProfile;
 use App\Services\ImageUploadService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\View\View;
 
 class MosqueProfileController extends Controller
@@ -34,6 +35,7 @@ class MosqueProfileController extends Controller
         }
 
         $mosqueProfile->fill($validated)->save();
+        Cache::forget('mosque-name');
 
         return redirect()
             ->route('admin.mosque-profile.edit')

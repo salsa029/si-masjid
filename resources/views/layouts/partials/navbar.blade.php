@@ -9,9 +9,9 @@ NAVBAR
             <!-- ===== LOGO ===== -->
             <a href="{{ route('home') }}" class="group flex items-center" aria-label="Beranda">
                 @php
-                    $mosque = \App\Models\MosqueProfile::first();
+                    $mosqueName = \Illuminate\Support\Facades\Cache::remember('mosque-name', now()->addHour(), fn () => \App\Models\MosqueProfile::value('name'));
                 @endphp
-                <img src="{{ asset('images/logo-annur.png') }}" alt="{{ $mosque->name ?? 'Masjid An-Nur' }}"
+                <img src="{{ asset('images/logo-annur.png') }}" alt="{{ $mosqueName ?? 'Masjid An-Nur' }}"
                     class="h-10 w-auto transition-transform group-hover:scale-105 md:h-12">
             </a>
 

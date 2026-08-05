@@ -39,6 +39,7 @@ use App\Http\Controllers\Admin\InfaqCampaignController;
 use App\Http\Controllers\Admin\InfaqController;
 use App\Http\Controllers\Admin\ZakatTypeController;
 use App\Http\Controllers\Admin\ZakatController;
+use App\Http\Controllers\Admin\UserController;
 
 // ============================================
 // PRAYER TIMES API CONTROLLER
@@ -207,6 +208,8 @@ Route::middleware(['auth', 'verified', 'role:admin'])
 
         // Rute Kelola Pengurus
         Route::resource('committees', CommitteeController::class)->except(['show']);
+        Route::patch('/committees/{committee}/move-up', [CommitteeController::class, 'moveUp'])->name('committees.move-up');
+        Route::patch('/committees/{committee}/move-down', [CommitteeController::class, 'moveDown'])->name('committees.move-down');
 
         // Rute Kelola Kategori Artikel
         Route::resource('article-categories', ArticleCategoryController::class)->except(['show']);
@@ -283,6 +286,9 @@ Route::middleware(['auth', 'verified', 'role:admin'])
         // Rute Pengaturan Donasi (Infaq & Zakat)
         Route::get('/donation-settings', [DonationSettingController::class, 'edit'])->name('donation-settings.edit');
         Route::put('/donation-settings', [DonationSettingController::class, 'update'])->name('donation-settings.update');
+
+        // Rute Kelola User & Admin
+        Route::resource('users', UserController::class)->except(['show']);
     });
 
 /*
