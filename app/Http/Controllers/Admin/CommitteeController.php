@@ -18,7 +18,7 @@ class CommitteeController extends Controller
     {
         $committees = Committee::query()
             ->when($request->filled('search'), fn($q) => $q->where('name', 'like', '%' . $request->input('search') . '%'))
-            ->orderBy('term_start', 'desc')
+            ->orderBy('sort_order')
             ->paginate(10)
             ->withQueryString();
 
@@ -46,6 +46,8 @@ class CommitteeController extends Controller
                 maxWidth: 800
             );
         }
+
+        $validated['sort_order'] = ((int) Committee::max('sort_order')) + 1;
 
         Committee::create($validated);
 
@@ -87,5 +89,45 @@ class CommitteeController extends Controller
         return redirect()
             ->route('admin.committees.index')
             ->with('success', 'Data pengurus berhasil dihapus.');
+    }
+
+    /**
+     * Tukar urutan tampil dengan pengurus di atasnya.
+     */
+    public function moveUp(Committee $committee): RedirectResponse
+    {
+        $previous = Committee::where('sort_order', '<', $committee->sort_order)
+            ->orderByDesc('sort_order')
+            ->first();
+
+        if ($previous) {
+            $this->swapSortOrder($committee, $previous);
+        }
+
+        return back();
+    }
+
+    /**
+     * Tukar urutan tampil dengan pengurus di bawahnya.
+     */
+    public function moveDown(Committee $committee): RedirectResponse
+    {
+        $next = Committee::where('sort_order', '>', $committee->sort_order)
+            ->orderBy('sort_order')
+            ->first();
+
+        if ($next) {
+            $this->swapSortOrder($committee, $next);
+        }
+
+        return back();
+    }
+
+    protected function swapSortOrder(Committee $a, Committee $b): void
+    {
+        [$orderA, $orderB] = [$a->sort_order, $b->sort_order];
+
+        $a->update(['sort_order' => $orderB]);
+        $b->update(['sort_order' => $orderA]);
     }
 }

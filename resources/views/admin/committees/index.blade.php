@@ -70,6 +70,51 @@
                     <tr class="transition-colors hover:bg-emerald-50/40">
                         <td class="px-5 py-3.5">
                             <div class="flex items-center gap-1.5">
+                                @if (request('search'))
+                                    <span class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-gray-300"
+                                        title="Kosongkan pencarian untuk mengurutkan">
+                                        <i class="fas fa-arrow-up"></i>
+                                    </span>
+                                    <span class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-gray-300"
+                                        title="Kosongkan pencarian untuk mengurutkan">
+                                        <i class="fas fa-arrow-down"></i>
+                                    </span>
+                                @else
+                                    @if ($loop->first && $committees->onFirstPage())
+                                        <span class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-gray-300"
+                                            title="Sudah paling atas">
+                                            <i class="fas fa-arrow-up"></i>
+                                        </span>
+                                    @else
+                                        <form action="{{ route('admin.committees.move-up', $committee) }}"
+                                            method="POST">
+                                            @csrf @method('PATCH')
+                                            <button type="submit"
+                                                class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-gray-500 transition hover:bg-gray-100 hover:text-gray-800"
+                                                title="Naikkan urutan">
+                                                <i class="fas fa-arrow-up"></i>
+                                            </button>
+                                        </form>
+                                    @endif
+
+                                    @if ($loop->last && !$committees->hasMorePages())
+                                        <span class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-gray-300"
+                                            title="Sudah paling bawah">
+                                            <i class="fas fa-arrow-down"></i>
+                                        </span>
+                                    @else
+                                        <form action="{{ route('admin.committees.move-down', $committee) }}"
+                                            method="POST">
+                                            @csrf @method('PATCH')
+                                            <button type="submit"
+                                                class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-gray-500 transition hover:bg-gray-100 hover:text-gray-800"
+                                                title="Turunkan urutan">
+                                                <i class="fas fa-arrow-down"></i>
+                                            </button>
+                                        </form>
+                                    @endif
+                                @endif
+
                                 <a href="{{ route('admin.committees.edit', $committee) }}"
                                     class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-emerald-700 transition hover:bg-emerald-100 hover:text-emerald-800"
                                     title="Ubah">

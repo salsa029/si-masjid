@@ -12,7 +12,7 @@ class Committee extends Model
     use SoftDeletes, LogsAdminActivity;
     use HasFactory;
 
-    protected $fillable = ['name', 'position', 'photo', 'bio', 'term_start', 'term_end'];
+    protected $fillable = ['name', 'position', 'photo', 'bio', 'term_start', 'term_end', 'sort_order'];
 
     protected function casts(): array
     {

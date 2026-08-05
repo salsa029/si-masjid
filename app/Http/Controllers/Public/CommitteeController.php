@@ -10,7 +10,7 @@ class CommitteeController extends Controller
 {
     public function index(): View
     {
-        $committees = Committee::orderBy('term_start')->get();
+        $committees = Committee::orderBy('sort_order')->get();
 
         return view('public.committees.index', compact('committees'));
     }
