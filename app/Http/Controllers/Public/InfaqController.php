@@ -53,6 +53,34 @@ class InfaqController extends Controller
     }
 
     /**
+     * Halaman transparansi: riwayat seluruh infaq yang sudah berhasil, tanpa batasan tanggal
+     * (semua transaksi sejak awal masjid menerima infaq lewat sistem ini). Nama yang ditampilkan
+     * mengikuti pilihan donatur saat berinfaq (nama asli atau "Hamba Allah" jika anonim),
+     * lewat accessor display_name pada trait HasPaymentWorkflow.
+     */
+    public function transparency(Request $request): View
+    {
+        $baseQuery = Infaq::where('payment_status', 'success')
+            ->when($request->filled('category'), fn ($q) => $q->where('category_id', $request->input('category')));
+
+        $infaqs = (clone $baseQuery)
+            ->with(['category', 'campaign', 'user'])
+            ->orderByDesc('paid_at')
+            ->paginate(12)
+            ->withQueryString();
+
+        $summary = [
+            'total_amount' => (clone $baseQuery)->sum('amount'),
+            'total_transactions' => (clone $baseQuery)->count(),
+            'total_donors' => (clone $baseQuery)->distinct('user_id')->count('user_id'),
+        ];
+
+        $categories = InfaqCategory::orderBy('name')->get();
+
+        return view('public.infaq.transparency', compact('infaqs', 'summary', 'categories'));
+    }
+
+    /**
      * Proses penyimpanan transaksi Infaq
      */
     public function store(Request $request): RedirectResponse

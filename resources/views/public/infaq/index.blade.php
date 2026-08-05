@@ -4,7 +4,13 @@
 
 @section('content')
     <div class="mx-auto max-w-4xl px-4 py-10">
-        <h1 class="mb-6 text-2xl font-bold text-gray-800">Infaq</h1>
+        <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
+            <h1 class="text-2xl font-bold text-gray-800">Infaq</h1>
+            <a href="{{ route('public.infaq.transparency') }}"
+                class="inline-flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-700 transition hover:bg-emerald-100">
+                <i class="fas fa-eye" aria-hidden="true"></i> Lihat Transparansi Dana
+            </a>
+        </div>
 
         @if ($activeCampaigns->isNotEmpty())
             <div class="mb-8 rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
