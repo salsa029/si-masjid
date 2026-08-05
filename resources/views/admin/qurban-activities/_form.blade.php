@@ -1,23 +1,36 @@
 @csrf
 
 <div class="space-y-5">
-    {{-- Row 1: Nama Kegiatan & Tanggal --}}
+    {{-- Row 1: Nama Kegiatan --}}
+    <div>
+        <label class="mb-1 block text-sm font-medium">Qurban Nama</label>
+        <input type="text" name="name" value="{{ old('name', $qurbanActivity->name ?? '') }}"
+            placeholder="Contoh: Qurban 2026" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
+        @error('name')
+            <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+        @enderror
+    </div>
+
+    {{-- Row 1b: Periode (Tanggal Mulai & Tanggal Selesai) --}}
     <div class="grid grid-cols-2 gap-4">
         <div>
-            <label class="mb-1 block text-sm font-medium">Qurban Nama</label>
-            <input type="text" name="name" value="{{ old('name', $qurbanActivity->name ?? '') }}"
-                placeholder="Contoh: Qurban 2026"
+            <label class="mb-1 block text-sm font-medium">Tanggal Mulai</label>
+            <input type="date" name="start_date"
+                value="{{ old('start_date', isset($qurbanActivity) ? $qurbanActivity->start_date?->format('Y-m-d') : '') }}"
                 class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
-            @error('name')
+            <p class="mt-1 text-xs text-gray-400">Katalog kurban otomatis tampil di halaman publik mulai tanggal ini.
+            </p>
+            @error('start_date')
                 <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
             @enderror
         </div>
         <div>
-            <label class="mb-1 block text-sm font-medium">Tanggal</label>
-            <input type="date" name="date"
-                value="{{ old('date', isset($qurbanActivity) ? $qurbanActivity->date?->format('Y-m-d') : '') }}"
+            <label class="mb-1 block text-sm font-medium">Tanggal Selesai</label>
+            <input type="date" name="end_date"
+                value="{{ old('end_date', isset($qurbanActivity) ? $qurbanActivity->end_date?->format('Y-m-d') : '') }}"
                 class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
-            @error('date')
+            <p class="mt-1 text-xs text-gray-400">Katalog & pemesanan otomatis ditutup sehari setelah tanggal ini.</p>
+            @error('end_date')
                 <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
             @enderror
         </div>

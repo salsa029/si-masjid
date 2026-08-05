@@ -16,7 +16,7 @@ class QurbanActivityController extends Controller
     public function index(): View
     {
         $qurbanActivities = QurbanActivity::withCount('animals')
-            ->latest('date')
+            ->latest('start_date')
             ->paginate(10);
 
         return view('admin.qurban-activities.index', compact('qurbanActivities'));

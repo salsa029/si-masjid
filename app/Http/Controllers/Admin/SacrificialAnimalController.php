@@ -17,7 +17,14 @@ class SacrificialAnimalController extends Controller
 
     public function index(Request $request): View
     {
+        $qurbanActivities = QurbanActivity::latest('start_date')->get();
+
+        // Wajib pilih Qurban Activity dulu; default ke kegiatan terbaru
+        // supaya daftar hewan tidak tercampur antar tahun/kegiatan.
+        $selectedActivityId = $request->input('qurban_activity_id', optional($qurbanActivities->first())->id);
+
         $animals = SacrificialAnimal::query()
+            ->when($selectedActivityId, fn($q) => $q->where('qurban_activity_id', $selectedActivityId))
             ->when($request->filled('search'), fn($q) => $q->where('name', 'like', '%' . $request->input('search') . '%'))
             ->when($request->filled('animal_type'), fn($q) => $q->where('animal_type', $request->input('animal_type')))
             ->when($request->filled('status'), fn($q) => $q->where('status', $request->input('status')))
@@ -25,12 +32,12 @@ class SacrificialAnimalController extends Controller
             ->paginate(10)
             ->withQueryString();
 
-        return view('admin.sacrificial-animals.index', compact('animals'));
+        return view('admin.sacrificial-animals.index', compact('animals', 'qurbanActivities', 'selectedActivityId'));
     }
 
     public function create(): View
     {
-        $qurbanActivities = QurbanActivity::latest('date')->get();
+        $qurbanActivities = QurbanActivity::latest('start_date')->get();
 
         return view('admin.sacrificial-animals.create', compact('qurbanActivities'));
     }
@@ -57,7 +64,7 @@ class SacrificialAnimalController extends Controller
     public function edit(SacrificialAnimal $sacrificialAnimal): View
     {
         $sacrificialAnimal->load('documentations');
-        $qurbanActivities = QurbanActivity::latest('date')->get();
+        $qurbanActivities = QurbanActivity::latest('start_date')->get();
 
         return view('admin.sacrificial-animals.edit', compact('sacrificialAnimal', 'qurbanActivities'));
     }

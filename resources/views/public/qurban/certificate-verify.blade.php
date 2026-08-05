@@ -40,7 +40,7 @@
                             <div class="flex items-center justify-between border-b border-gray-100 pb-3">
                                 <span class="text-sm text-gray-500">Tanggal</span>
                                 <span class="text-sm font-semibold text-gray-800">
-                                    {{ $qurbanOrder->animal->activity->date?->translatedFormat('d F Y') }}
+                                    {{ $qurbanOrder->animal->activity->start_date?->translatedFormat('d F Y') }}
                                 </span>
                             </div>
                         @endif

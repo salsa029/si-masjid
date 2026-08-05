@@ -41,6 +41,10 @@ class QurbanController extends Controller
     public function index(): View
     {
         $sacrificialAnimals = SacrificialAnimal::where('status', '!=', 'slaughtered')
+            ->where(function ($query) {
+                $query->whereNull('qurban_activity_id')
+                    ->orWhereHas('activity', fn ($q) => $q->open());
+            })
             ->withCount(['orders as booked_slots_count' => function ($query) {
                 $query->where('payment_status', 'success');
             }])
@@ -197,7 +201,7 @@ class QurbanController extends Controller
             \IntlDateFormatter::TRADITIONAL,
             'yyyy'
         );
-        $hijriYear = $hijriFormatter->format(($activity?->date ?? now())->getTimestamp());
+        $hijriYear = $hijriFormatter->format(($activity?->start_date ?? now())->getTimestamp());
 
         // Latar belakang sertifikat (desain dari Canva), di-embed sebagai base64
         $backgroundDataUri = 'data:image/png;base64,' . base64_encode(

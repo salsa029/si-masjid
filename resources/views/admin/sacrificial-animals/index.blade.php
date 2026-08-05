@@ -15,14 +15,40 @@
                 <p class="text-sm text-gray-500">Total {{ $animals->total() }} hewan kurban terdaftar</p>
             </div>
         </div>
-        <a href="{{ route('admin.sacrificial-animals.create') }}"
+        <a href="{{ route('admin.sacrificial-animals.create') }}{{ $selectedActivityId ? '?qurban_activity_id=' . $selectedActivityId : '' }}"
             class="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-emerald-600 to-emerald-700 px-5 py-2.5 text-sm font-medium text-white shadow-md shadow-emerald-900/20 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-emerald-900/30">
             <i class="fas fa-plus"></i> Tambah Hewan Kurban
         </a>
     </div>
 
+    @if ($qurbanActivities->isEmpty())
+        <div class="mb-5 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+            <i class="fas fa-triangle-exclamation mr-1" aria-hidden="true"></i>
+            Belum ada Qurban Activity. Silakan
+            <a href="{{ route('admin.qurban-activities.create') }}" class="font-semibold underline">tambah Qurban
+                Activity</a> terlebih dahulu sebelum mengelola hewan kurban.
+        </div>
+    @else
+        {{-- Pilih Qurban Activity — wajib dipilih, hanya hewan dari kegiatan ini yang ditampilkan --}}
+        <div class="mb-5 rounded-xl border border-emerald-100 bg-emerald-50/60 p-4">
+            <label for="qurban_activity_id" class="mb-1 block text-xs font-semibold text-emerald-800">
+                <i class="fas fa-calendar-check mr-1" aria-hidden="true"></i> Menampilkan Hewan Kurban untuk Kegiatan
+            </label>
+            <select name="qurban_activity_id" id="qurban_activity_id" form="filter-animals-form"
+                onchange="document.getElementById('filter-animals-form').submit()"
+                class="w-full max-w-md rounded-lg border border-emerald-300 bg-white px-3 py-2 text-sm font-medium text-emerald-800 transition focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 sm:w-auto">
+                @foreach ($qurbanActivities as $activity)
+                    <option value="{{ $activity->id }}" @selected((string) $selectedActivityId === (string) $activity->id)>
+                        {{ $activity->name }} ({{ $activity->start_date->format('d/m/Y') }} &ndash;
+                        {{ $activity->end_date->format('d/m/Y') }}){{ ! $activity->is_open ? ' — Selesai' : '' }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+    @endif
+
     {{-- Form Pencarian & Filter --}}
-    <form method="GET" class="mb-5 rounded-xl border border-gray-100 bg-white p-4 shadow-sm shadow-gray-200/60">
+    <form method="GET" id="filter-animals-form" class="mb-5 rounded-xl border border-gray-100 bg-white p-4 shadow-sm shadow-gray-200/60">
         <div class="flex flex-wrap items-end gap-3">
             <div class="min-w-[180px] flex-1">
                 <label for="search" class="mb-1 block text-xs font-medium text-gray-600">Cari Nama/Kode Hewan</label>

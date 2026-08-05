@@ -4,12 +4,13 @@
     {{-- Row 0: Qurban Activity (wajib dipilih dahulu) --}}
     <div>
         <label class="mb-1 block text-sm font-medium">Qurban Activity</label>
-        @php $currentActivityId = old('qurban_activity_id', $sacrificialAnimal->qurban_activity_id ?? ''); @endphp
+        @php $currentActivityId = old('qurban_activity_id', $sacrificialAnimal->qurban_activity_id ?? request('qurban_activity_id', '')); @endphp
         <select name="qurban_activity_id" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
             <option value="">— Pilih Qurban Activity —</option>
             @foreach ($qurbanActivities as $activity)
                 <option value="{{ $activity->id }}" @selected((string) $currentActivityId === (string) $activity->id)>
-                    {{ $activity->name }} ({{ $activity->date?->format('d/m/Y') }})
+                    {{ $activity->name }} ({{ $activity->start_date?->format('d/m/Y') }} &ndash;
+                    {{ $activity->end_date?->format('d/m/Y') }})
                 </option>
             @endforeach
         </select>

@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use App\Traits\LogsAdminActivity;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -14,7 +16,8 @@ class QurbanActivity extends Model
 
     protected $fillable = [
         'name',
-        'date',
+        'start_date',
+        'end_date',
         'description',
         'dkm_chairman_name',
         'dkm_chairman_signature',
@@ -23,7 +26,8 @@ class QurbanActivity extends Model
     ];
 
     protected $casts = [
-        'date' => 'date',
+        'start_date' => 'date',
+        'end_date' => 'date',
     ];
 
     public function animals(): HasMany
@@ -34,5 +38,52 @@ class QurbanActivity extends Model
     public function getTotalBalanceKgAttribute(): float
     {
         return (float) $this->animals()->sum('weight');
+    }
+
+    /**
+     * Kegiatan otomatis tampil di katalog publik begitu tanggal mulai tiba,
+     * dan otomatis tutup begitu tanggal selesai terlewati.
+     */
+    public function hasStarted(): bool
+    {
+        return $this->start_date === null || ! $this->start_date->copy()->startOfDay()->isFuture();
+    }
+
+    public function hasEnded(): bool
+    {
+        return $this->end_date !== null && $this->end_date->copy()->endOfDay()->isPast();
+    }
+
+    public function isRegistrationOpen(): bool
+    {
+        return $this->hasStarted() && ! $this->hasEnded();
+    }
+
+    protected function isOpen(): Attribute
+    {
+        return Attribute::get(fn () => $this->isRegistrationOpen());
+    }
+
+    /**
+     * Status kegiatan untuk ditampilkan di UI admin: upcoming | active | ended.
+     */
+    protected function statusLabel(): Attribute
+    {
+        return Attribute::get(function () {
+            if (! $this->hasStarted()) {
+                return 'upcoming';
+            }
+
+            return $this->hasEnded() ? 'ended' : 'active';
+        });
+    }
+
+    public function scopeOpen(Builder $query): Builder
+    {
+        $today = now()->toDateString();
+
+        return $query
+            ->where(fn ($q) => $q->whereNull('start_date')->orWhereDate('start_date', '<=', $today))
+            ->where(fn ($q) => $q->whereNull('end_date')->orWhereDate('end_date', '>=', $today));
     }
 }

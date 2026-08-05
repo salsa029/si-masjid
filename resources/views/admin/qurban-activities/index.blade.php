@@ -31,6 +31,7 @@
                     <th class="px-5 py-4">Ketua DKM</th>
                     <th class="px-5 py-4">Ketua Kurban</th>
                     <th class="px-5 py-4">Jml Hewan</th>
+                    <th class="px-5 py-4">Status</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-100">
@@ -58,14 +59,38 @@
                             </div>
                         </td>
                         <td class="px-5 py-3.5 font-medium text-gray-800">{{ $activity->name }}</td>
-                        <td class="px-5 py-3.5 text-gray-600">{{ $activity->date?->format('d/m/Y') ?? '-' }}</td>
+                        <td class="px-5 py-3.5 text-gray-600">
+                            {{ $activity->start_date?->format('d/m/Y') ?? '-' }} &ndash;
+                            {{ $activity->end_date?->format('d/m/Y') ?? '-' }}
+                        </td>
                         <td class="px-5 py-3.5 text-gray-600">{{ $activity->dkm_chairman_name ?? '-' }}</td>
                         <td class="px-5 py-3.5 text-gray-600">{{ $activity->qurban_chairman_name ?? '-' }}</td>
                         <td class="px-5 py-3.5 text-gray-600">{{ $activity->animals_count }}</td>
+                        <td class="px-5 py-3.5">
+                            @switch($activity->status_label)
+                                @case('upcoming')
+                                    <span class="rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-700">
+                                        Akan Datang
+                                    </span>
+                                @break
+
+                                @case('active')
+                                    <span
+                                        class="rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-700">
+                                        Aktif
+                                    </span>
+                                @break
+
+                                @default
+                                    <span class="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600">
+                                        Selesai
+                                    </span>
+                            @endswitch
+                        </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="6" class="px-5 py-16 text-center text-gray-400">
+                        <td colspan="7" class="px-5 py-16 text-center text-gray-400">
                             <div class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-gray-50">
                                 <i class="fas fa-calendar-check text-xl text-gray-300"></i>
                             </div>

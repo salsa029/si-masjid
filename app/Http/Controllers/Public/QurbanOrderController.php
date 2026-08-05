@@ -28,6 +28,11 @@ class QurbanOrderController extends Controller
     public function create(SacrificialAnimal $sacrificialAnimal): View
     {
         abort_if($sacrificialAnimal->status !== 'available', 404);
+        abort_if(
+            $sacrificialAnimal->activity && ! $sacrificialAnimal->activity->isRegistrationOpen(),
+            404,
+            'Batas waktu pendaftaran kurban untuk kegiatan ini sudah berakhir.'
+        );
 
         $takenSlots = QurbanParticipant::whereHas('order', function ($query) use ($sacrificialAnimal) {
             $query->where('sacrificial_animal_id', $sacrificialAnimal->id)
@@ -45,6 +50,12 @@ class QurbanOrderController extends Controller
 
         $qurbanOrder = DB::transaction(function () use ($validated, $sacrificialAnimal) {
             $lockedAnimal = SacrificialAnimal::where('id', $sacrificialAnimal->id)->lockForUpdate()->first();
+
+            if ($lockedAnimal->activity && ! $lockedAnimal->activity->isRegistrationOpen()) {
+                throw ValidationException::withMessages([
+                    'order_type' => 'Batas waktu pendaftaran kurban untuk kegiatan ini sudah berakhir.',
+                ]);
+            }
 
             $slotNumber = $validated['order_type'] === 'patungan' ? (int) $validated['slot_number'] : 1;
 
