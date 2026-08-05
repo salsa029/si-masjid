@@ -155,6 +155,69 @@
                     </div>
                 </div>
 
+                {{-- Media Sosial --}}
+                <div>
+                    <p class="mb-3 text-sm font-medium text-gray-700">
+                        <i class="fas fa-share-nodes mr-1.5 text-emerald-600"></i> Media Sosial
+                    </p>
+                    <p class="mb-3 text-xs text-gray-400">Kosongkan yang tidak dipakai — ikonnya otomatis disembunyikan
+                        di halaman publik kalau link-nya kosong.</p>
+                    <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                        <div>
+                            <label for="facebook_url" class="mb-1.5 flex items-center gap-1.5 text-sm text-gray-600">
+                                <i class="fab fa-facebook-f text-emerald-600"></i> Facebook
+                            </label>
+                            <input type="url" id="facebook_url" name="facebook_url"
+                                value="{{ old('facebook_url', $mosqueProfile?->facebook_url ?? '') }}"
+                                class="@error('facebook_url') border-red-500 ring-2 ring-red-200 @enderror w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm transition focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+                                placeholder="https://facebook.com/namamasjid">
+                            @error('facebook_url')
+                                <p class="mt-1.5 text-xs text-red-600"><i
+                                        class="fas fa-circle-exclamation mr-1"></i>{{ $message }}</p>
+                            @enderror
+                        </div>
+                        <div>
+                            <label for="instagram_url" class="mb-1.5 flex items-center gap-1.5 text-sm text-gray-600">
+                                <i class="fab fa-instagram text-emerald-600"></i> Instagram
+                            </label>
+                            <input type="url" id="instagram_url" name="instagram_url"
+                                value="{{ old('instagram_url', $mosqueProfile?->instagram_url ?? '') }}"
+                                class="@error('instagram_url') border-red-500 ring-2 ring-red-200 @enderror w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm transition focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+                                placeholder="https://instagram.com/namamasjid">
+                            @error('instagram_url')
+                                <p class="mt-1.5 text-xs text-red-600"><i
+                                        class="fas fa-circle-exclamation mr-1"></i>{{ $message }}</p>
+                            @enderror
+                        </div>
+                        <div>
+                            <label for="youtube_url" class="mb-1.5 flex items-center gap-1.5 text-sm text-gray-600">
+                                <i class="fab fa-youtube text-emerald-600"></i> YouTube
+                            </label>
+                            <input type="url" id="youtube_url" name="youtube_url"
+                                value="{{ old('youtube_url', $mosqueProfile?->youtube_url ?? '') }}"
+                                class="@error('youtube_url') border-red-500 ring-2 ring-red-200 @enderror w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm transition focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+                                placeholder="https://youtube.com/@namamasjid">
+                            @error('youtube_url')
+                                <p class="mt-1.5 text-xs text-red-600"><i
+                                        class="fas fa-circle-exclamation mr-1"></i>{{ $message }}</p>
+                            @enderror
+                        </div>
+                        <div>
+                            <label for="whatsapp_url" class="mb-1.5 flex items-center gap-1.5 text-sm text-gray-600">
+                                <i class="fab fa-whatsapp text-emerald-600"></i> WhatsApp
+                            </label>
+                            <input type="url" id="whatsapp_url" name="whatsapp_url"
+                                value="{{ old('whatsapp_url', $mosqueProfile?->whatsapp_url ?? '') }}"
+                                class="@error('whatsapp_url') border-red-500 ring-2 ring-red-200 @enderror w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm transition focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+                                placeholder="https://wa.me/6281234567890">
+                            @error('whatsapp_url')
+                                <p class="mt-1.5 text-xs text-red-600"><i
+                                        class="fas fa-circle-exclamation mr-1"></i>{{ $message }}</p>
+                            @enderror
+                        </div>
+                    </div>
+                </div>
+
                 {{-- Hero Image --}}
                 <div>
                     <label class="mb-1.5 block text-sm font-medium text-gray-700">

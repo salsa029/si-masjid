@@ -11,18 +11,30 @@
                     {{ $mosque->history ?? 'Pusat Ibadah dan Peradaban Umat Islam.' }}
                 </p>
                 <div class="flex gap-3">
-                    <a href="#" class="text-green-300 transition hover:text-white" aria-label="Facebook">
-                        <i class="fab fa-facebook-f" aria-hidden="true"></i>
-                    </a>
-                    <a href="#" class="text-green-300 transition hover:text-white" aria-label="Instagram">
-                        <i class="fab fa-instagram" aria-hidden="true"></i>
-                    </a>
-                    <a href="#" class="text-green-300 transition hover:text-white" aria-label="YouTube">
-                        <i class="fab fa-youtube" aria-hidden="true"></i>
-                    </a>
-                    <a href="#" class="text-green-300 transition hover:text-white" aria-label="WhatsApp">
-                        <i class="fab fa-whatsapp" aria-hidden="true"></i>
-                    </a>
+                    @if (! empty($mosque->facebook_url))
+                        <a href="{{ $mosque->facebook_url }}" target="_blank" rel="noopener noreferrer"
+                            class="text-green-300 transition hover:text-white" aria-label="Facebook">
+                            <i class="fab fa-facebook-f" aria-hidden="true"></i>
+                        </a>
+                    @endif
+                    @if (! empty($mosque->instagram_url))
+                        <a href="{{ $mosque->instagram_url }}" target="_blank" rel="noopener noreferrer"
+                            class="text-green-300 transition hover:text-white" aria-label="Instagram">
+                            <i class="fab fa-instagram" aria-hidden="true"></i>
+                        </a>
+                    @endif
+                    @if (! empty($mosque->youtube_url))
+                        <a href="{{ $mosque->youtube_url }}" target="_blank" rel="noopener noreferrer"
+                            class="text-green-300 transition hover:text-white" aria-label="YouTube">
+                            <i class="fab fa-youtube" aria-hidden="true"></i>
+                        </a>
+                    @endif
+                    @if (! empty($mosque->whatsapp_url))
+                        <a href="{{ $mosque->whatsapp_url }}" target="_blank" rel="noopener noreferrer"
+                            class="text-green-300 transition hover:text-white" aria-label="WhatsApp">
+                            <i class="fab fa-whatsapp" aria-hidden="true"></i>
+                        </a>
+                    @endif
                 </div>
             </div>
 

@@ -20,6 +20,10 @@ class MosqueProfile extends Model
         'bank_account_number',
         'latitude',
         'longitude',
+        'facebook_url',
+        'instagram_url',
+        'youtube_url',
+        'whatsapp_url',
     ];
 
     public function galleryImages()

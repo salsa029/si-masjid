@@ -600,26 +600,34 @@
                         <div class="mt-8 border-t border-gray-100 pt-6">
                             <h4 class="mb-3 font-semibold text-gray-800">Ikuti Kami</h4>
                             <div class="flex gap-3">
-                                <a href="#"
-                                    class="flex h-10 w-10 items-center justify-center rounded-full bg-green-100 text-green-600 transition hover:bg-green-600 hover:text-white"
-                                    aria-label="Facebook">
-                                    <i class="fab fa-facebook-f" aria-hidden="true"></i>
-                                </a>
-                                <a href="#"
-                                    class="flex h-10 w-10 items-center justify-center rounded-full bg-green-100 text-green-600 transition hover:bg-green-600 hover:text-white"
-                                    aria-label="Instagram">
-                                    <i class="fab fa-instagram" aria-hidden="true"></i>
-                                </a>
-                                <a href="#"
-                                    class="flex h-10 w-10 items-center justify-center rounded-full bg-green-100 text-green-600 transition hover:bg-green-600 hover:text-white"
-                                    aria-label="YouTube">
-                                    <i class="fab fa-youtube" aria-hidden="true"></i>
-                                </a>
-                                <a href="#"
-                                    class="flex h-10 w-10 items-center justify-center rounded-full bg-green-100 text-green-600 transition hover:bg-green-600 hover:text-white"
-                                    aria-label="Twitter">
-                                    <i class="fab fa-twitter" aria-hidden="true"></i>
-                                </a>
+                                @if ($mosqueProfile?->facebook_url)
+                                    <a href="{{ $mosqueProfile->facebook_url }}" target="_blank" rel="noopener noreferrer"
+                                        class="flex h-10 w-10 items-center justify-center rounded-full bg-green-100 text-green-600 transition hover:bg-green-600 hover:text-white"
+                                        aria-label="Facebook">
+                                        <i class="fab fa-facebook-f" aria-hidden="true"></i>
+                                    </a>
+                                @endif
+                                @if ($mosqueProfile?->instagram_url)
+                                    <a href="{{ $mosqueProfile->instagram_url }}" target="_blank" rel="noopener noreferrer"
+                                        class="flex h-10 w-10 items-center justify-center rounded-full bg-green-100 text-green-600 transition hover:bg-green-600 hover:text-white"
+                                        aria-label="Instagram">
+                                        <i class="fab fa-instagram" aria-hidden="true"></i>
+                                    </a>
+                                @endif
+                                @if ($mosqueProfile?->youtube_url)
+                                    <a href="{{ $mosqueProfile->youtube_url }}" target="_blank" rel="noopener noreferrer"
+                                        class="flex h-10 w-10 items-center justify-center rounded-full bg-green-100 text-green-600 transition hover:bg-green-600 hover:text-white"
+                                        aria-label="YouTube">
+                                        <i class="fab fa-youtube" aria-hidden="true"></i>
+                                    </a>
+                                @endif
+                                @if ($mosqueProfile?->whatsapp_url)
+                                    <a href="{{ $mosqueProfile->whatsapp_url }}" target="_blank" rel="noopener noreferrer"
+                                        class="flex h-10 w-10 items-center justify-center rounded-full bg-green-100 text-green-600 transition hover:bg-green-600 hover:text-white"
+                                        aria-label="WhatsApp">
+                                        <i class="fab fa-whatsapp" aria-hidden="true"></i>
+                                    </a>
+                                @endif
                             </div>
                         </div>
                     </div>
